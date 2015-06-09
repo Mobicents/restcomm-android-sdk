@@ -654,8 +654,10 @@ public class SipManager implements SipListener, ISipManager, Serializable {
 		org.mobicents.restcomm.android.sdk.impl.sipmessages.Register registerRequest = new org.mobicents.restcomm.android.sdk.impl.sipmessages.Register();
 		try {
 			Request r = registerRequest.MakeRequest(this);
-			final ClientTransaction transaction = this.sipProvider
-					.getNewClientTransaction(r);
+
+			final ClientTransaction transaction =
+					ClientTxnAsync.run(new ClientTxnAsync.Data(r, sipProvider));
+
 			// Send the request statefully, through the client transaction.
 			Thread thread = new Thread() {
 				public void run() {
@@ -672,10 +674,7 @@ public class SipManager implements SipListener, ISipManager, Serializable {
 			e.printStackTrace();
 		} catch (InvalidArgumentException e) {
 			e.printStackTrace();
-		} catch (TransactionUnavailableException e) {
-			e.printStackTrace();
 		}
-
 	}
 
 	@Override
