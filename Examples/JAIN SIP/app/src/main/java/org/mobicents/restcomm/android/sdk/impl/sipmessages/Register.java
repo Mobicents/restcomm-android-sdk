@@ -17,6 +17,8 @@ import android.javax.sip.message.MessageFactory;
 import android.javax.sip.message.Request;
 import android.os.AsyncTask;
 
+import org.mobicents.restcomm.android.sdk.SipProfile;
+
 public class Register {
 
 	public Request MakeRequest(org.mobicents.restcomm.android.sdk.impl.SipManager sipManager) throws ParseException,
@@ -26,21 +28,21 @@ public class Register {
 		SipProvider sipProvider = sipManager.sipProvider;
 		MessageFactory messageFactory = sipManager.messageFactory;
 		HeaderFactory headerFactory = sipManager.headerFactory;
+		SipProfile sipProfile = sipManager.getSipProfile();
 		// Create addresses and via header for the request
 		Address fromAddress = addressFactory.createAddress("sip:"
-				+ sipManager.getSipProfile().getSipUserName() + "@"
-				+ sipManager.getSipProfile().getRemoteIp());
-		fromAddress.setDisplayName(sipManager.getSipProfile().getSipUserName());
+				+ sipProfile.getSipIdentity() + "@"
+				+ sipProfile.getSipDomain());
+		fromAddress.setDisplayName(sipProfile.getSipUserName());
 		Address toAddress = addressFactory.createAddress("sip:"
-				+ sipManager.getSipProfile().getSipUserName() + "@"
-				+ sipManager.getSipProfile().getRemoteIp());
-		toAddress.setDisplayName(sipManager.getSipProfile().getSipUserName());
+				+ sipProfile.getSipIdentity() + "@"
+				+ sipProfile.getSipDomain());
+		toAddress.setDisplayName(sipProfile.getSipUserName());
 
 		Address contactAddress = sipManager.createContactAddress();
 		ArrayList<ViaHeader> viaHeaders = sipManager.createViaHeader();
 		URI requestURI = addressFactory.createAddress(
-				"sip:" + sipManager.getSipProfile().getRemoteEndpoint())
-				.getURI();
+				"sip:" + sipManager.getSipProfile().getSipDomain()).getURI();
 		// Build the request
 		final Request request = messageFactory.createRequest(requestURI,
 				Request.REGISTER, sipProvider.getNewCallId(),

@@ -33,6 +33,15 @@ public class MainActivity extends ActionBarActivity implements OnClickListener,
 	String chatText = "";
 	SipProfile sipProfile;
 
+	private class Prefs {
+		static final String USER = "pref_sip_user";
+		static final String DOMAIN = "pref_sip_domain";
+		static final String AUTH_USER = "pref_sip_auth_user";
+		static final String PASSWORD = "pref_sip_password";
+		static final String PROXY_IP = "pref_proxy_ip";
+		static final String PROXY_PORT = "pref_proxy_port";
+	}
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -113,30 +122,30 @@ public class MainActivity extends ActionBarActivity implements OnClickListener,
 	@Override
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
 			String key) {
-		if (key.equals("pref_proxy_ip")) {
-			sipProfile.setRemoteIp((prefs.getString("pref_proxy_ip", "")));
-		} else if (key.equals("pref_proxy_port")) {
-			sipProfile.setRemotePort(Integer.parseInt(prefs.getString(
-					"pref_proxy_port", "5060")));
-		}  else if (key.equals("pref_sip_user")) {
-			sipProfile.setSipUserName(prefs.getString("pref_sip_user",
-					"alice"));
-		} else if (key.equals("pref_sip_password")) {
-			sipProfile.setSipPassword(prefs.getString("pref_sip_password",
-					"1234"));
+		if (key.equals(Prefs.PROXY_IP)) {
+			sipProfile.setRemoteIp((prefs.getString(key, "")));
+		} else if (key.equals(Prefs.PROXY_PORT)) {
+			sipProfile.setRemotePort(Integer.parseInt(prefs.getString(key, "5060")));
+		} else if (key.equals(Prefs.USER)) {
+			sipProfile.setSipIdentity(prefs.getString(key, "alice"));
+		} else if (key.equals(Prefs.DOMAIN)) {
+			sipProfile.setSipDomain(prefs.getString(key, "SIP domain"));
+		} else if (key.equals(Prefs.AUTH_USER)) {
+			sipProfile.setSipUserName(prefs.getString(key, "alice"));
+		} else if (key.equals(Prefs.PASSWORD)) {
+			sipProfile.setSipPassword(prefs.getString(key, "1234"));
 		}
 
 	}
 
 	@SuppressWarnings("static-access")
 	private void initializeSipFromPreferences() {
-		sipProfile.setRemoteIp((prefs.getString("pref_proxy_ip", "")));
-		sipProfile.setRemotePort(Integer.parseInt(prefs.getString(
-				"pref_proxy_port", "5060")));
-		sipProfile.setSipUserName(prefs.getString("pref_sip_user", "alice"));
-		sipProfile.setSipPassword(prefs
-				.getString("pref_sip_password", "1234"));
-
+		sipProfile.setRemoteIp((prefs.getString(Prefs.PROXY_IP, "")));
+		sipProfile.setRemotePort(Integer.parseInt(prefs.getString(Prefs.PROXY_PORT, "5060")));
+		sipProfile.setSipIdentity(prefs.getString(Prefs.USER, "alice"));
+		sipProfile.setSipDomain(prefs.getString(Prefs.DOMAIN, "SIP domain"));
+		sipProfile.setSipUserName(prefs.getString(Prefs.AUTH_USER, "alice"));
+		sipProfile.setSipPassword(prefs.getString(Prefs.PASSWORD, "1234"));
 	}
 
 }
