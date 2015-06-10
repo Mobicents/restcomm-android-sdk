@@ -9,6 +9,14 @@
             android:key="pref_sip_user"
             android:title="User" />
         <EditTextPreference
+            android:defaultValue="sip.domain.com"
+            android:key="pref_sip_domain"
+            android:title="SIP Domain" />
+        <EditTextPreference
+            android:defaultValue="alice"
+            android:key="pref_sip_auth_user"
+            android:title="SIP Auth User" />
+        <EditTextPreference
             android:defaultValue="1234"
             android:key="pref_sip_password"
             android:title="Password" />

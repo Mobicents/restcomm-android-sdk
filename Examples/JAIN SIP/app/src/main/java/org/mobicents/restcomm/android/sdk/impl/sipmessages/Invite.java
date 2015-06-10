@@ -30,7 +30,7 @@ public class Invite  {
     public Request MakeRequest(SipManager sipManager,String to, int port){
     	
     	try {
-			SipURI from = sipManager.addressFactory.createSipURI(sipManager.getSipProfile().getSipUserName(), sipManager.getSipProfile().getLocalEndpoint());
+			SipURI from = sipManager.addressFactory.createSipURI(sipManager.getSipProfile().getSipIdentity(), sipManager.getSipProfile().getSipDomain());
 			Address fromNameAddress = sipManager.addressFactory.createAddress(from);
 			//fromNameAddress.setDisplayName(sipUsername);
 			FromHeader fromHeader = sipManager.headerFactory.createFromHeader(fromNameAddress,

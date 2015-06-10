@@ -60,6 +60,7 @@ import android.javax.sip.header.ViaHeader;
 import android.javax.sip.message.MessageFactory;
 import android.javax.sip.message.Request;
 import android.javax.sip.message.Response;
+import android.util.Log;
 
 public class SipManager implements SipListener, ISipManager, Serializable {
 	private static SipStack sipStack;
@@ -80,6 +81,8 @@ public class SipManager implements SipListener, ISipManager, Serializable {
 	private boolean initialized;
 	private SipManagerState sipManagerState;
     private HashMap<String,String> customHeaders;
+
+	public static String TAG = "SipManager";
 
 	public SipProfile getSipProfile() {
 
@@ -175,7 +178,7 @@ public class SipManager implements SipListener, ISipManager, Serializable {
 		ServerTransaction serverTransactionId = arg0.getServerTransaction();
 		SIPMessage sp = (SIPMessage) request;
 		System.out.println(request.getMethod());
-		if (request.getMethod().equals("MESSAGE")) {
+		if (request.getMethod().equals(Request.MESSAGE)) {
 			sendOk(arg0);
 
 			try {
@@ -191,13 +194,12 @@ public class SipManager implements SipListener, ISipManager, Serializable {
 			dispatchSipEvent(new SipEvent(this, SipEventType.BYE, "", sp
 					.getFrom().getAddress().toString()));
 
-		}
-		if (request.getMethod().equals("INVITE")) {
+		} else if (request.getMethod().equals(Request.INVITE)) {
 			processInvite(arg0, serverTransactionId);
 		}
 	}
 
-	private void sendBYE(Request request) {
+	private void sendBYE(final Request request) {
 		Thread thread = new Thread() {
 			public void run() {
 
@@ -205,9 +207,8 @@ public class SipManager implements SipListener, ISipManager, Serializable {
 				try {
 					responseBye = messageFactory.createResponse(
 							Response.DECLINE,
-							currentCallTransaction.getRequest());
+							request);
 					currentCallTransaction.sendResponse(responseBye);
-
 				} catch (ParseException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -269,14 +270,22 @@ public class SipManager implements SipListener, ISipManager, Serializable {
 
 	public void processTimeout(TimeoutEvent timeoutEvent) {
 
-		System.out.println("Transaction Time out");
+		Log.d(TAG, "Transaction timed out");
+
+		if (timeoutEvent.isServerTransaction() == false) {
+			ClientTransaction ct = timeoutEvent.getClientTransaction();
+
+			if (ct != null) {
+				Log.d(TAG, "Client transaction timed out: " + ct.getRequest());
+			}
+		}
 	}
 
 	@Override
 	public void processResponse(ResponseEvent arg0) {
 
 		Response response = (Response) arg0.getResponse();
-		System.out.println(response.getStatusCode());
+		Log.d(TAG, "Response: " + response);
 
 		Dialog responseDialog = null;
 		ClientTransaction tid = arg0.getClientTransaction();
@@ -654,8 +663,10 @@ public class SipManager implements SipListener, ISipManager, Serializable {
 		org.mobicents.restcomm.android.sdk.impl.sipmessages.Register registerRequest = new org.mobicents.restcomm.android.sdk.impl.sipmessages.Register();
 		try {
 			Request r = registerRequest.MakeRequest(this);
-			final ClientTransaction transaction = this.sipProvider
-					.getNewClientTransaction(r);
+
+			final ClientTransaction transaction =
+					ClientTxnAsync.run(new ClientTxnAsync.Data(r, sipProvider));
+
 			// Send the request statefully, through the client transaction.
 			Thread thread = new Thread() {
 				public void run() {
@@ -669,13 +680,10 @@ public class SipManager implements SipListener, ISipManager, Serializable {
 			thread.start();
 
 		} catch (ParseException e) {
-			e.printStackTrace();
+			Log.e("Register", "Exception", e);
 		} catch (InvalidArgumentException e) {
-			e.printStackTrace();
-		} catch (TransactionUnavailableException e) {
-			e.printStackTrace();
+			Log.e("Register", "Exception", e);
 		}
-
 	}
 
 	@Override
@@ -686,22 +694,18 @@ public class SipManager implements SipListener, ISipManager, Serializable {
 		this.sipManagerState = SipManagerState.CALLING;
 		Invite inviteRequest = new Invite();
 		Request r = inviteRequest.MakeRequest(this, to, localRtpPort);
-		try {
-			final ClientTransaction transaction = this.sipProvider
-					.getNewClientTransaction(r);
-			Thread thread = new Thread() {
-				public void run() {
-					try {
-						transaction.sendRequest();
-					} catch (SipException e) {
-						e.printStackTrace();
-					}
+		final ClientTransaction transaction =
+                ClientTxnAsync.run(new ClientTxnAsync.Data(r, sipProvider));
+		Thread thread = new Thread() {
+			public void run() {
+				try {
+					transaction.sendRequest();
+				} catch (SipException e) {
+					e.printStackTrace();
 				}
-			};
-			thread.start();
-		} catch (TransactionUnavailableException e) {
-			e.printStackTrace();
-		}
+			}
+		};
+		thread.start();
 	}
 
 	@Override
@@ -713,8 +717,9 @@ public class SipManager implements SipListener, ISipManager, Serializable {
 		try {
 			Request r = inviteRequest.MakeRequest(this, to, message);
 
-			final ClientTransaction transaction = this.sipProvider
-					.getNewClientTransaction(r);
+			final ClientTransaction transaction =
+					ClientTxnAsync.run(new ClientTxnAsync.Data(r, sipProvider));
+
 			Thread thread = new Thread() {
 				public void run() {
 					try {
@@ -725,14 +730,11 @@ public class SipManager implements SipListener, ISipManager, Serializable {
 				}
 			};
 			thread.start();
-		} catch (TransactionUnavailableException e) {
-			e.printStackTrace();
 		} catch (ParseException e1) {
 			e1.printStackTrace();
 		} catch (InvalidArgumentException e1) {
 			e1.printStackTrace();
 		}
-
 	}
 
 	@Override

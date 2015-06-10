@@ -22,15 +22,36 @@
 
 package org.mobicents.restcomm.android.sdk;
 
+import android.util.Log;
+
 public class SipProfile {
+	private static final String TAG = "SipProfile";
+
 	private  String localIp;
 	private  int localPort = 5080;
 	private  String transport = "udp";
 
+	/**
+	 * SIP outbound proxy
+ 	 */
 	private  String remoteIp = "23.23.228.238";
 	private  int remotePort = 5060;
+	/**
+	 * SIP auth username
+	 */
 	private  String sipUserName;
+	/**
+	 * SIP password
+	 */
 	private  String sipPassword;
+	/**
+	 * SIP identity
+	 */
+	private  String sipIdentity;
+	/**
+	 * SIP domain
+	 */
+	private  String sipDomain;
 
 	public  String getLocalIp() {
 		return localIp;
@@ -103,5 +124,21 @@ public class SipProfile {
 		this.transport = transport;
 	}
 
-	
+	public void setSipIdentity(String sipIdentity) {
+		Log.d(TAG, "Setting sipIdentity:" + sipIdentity);
+		this.sipIdentity = sipIdentity;
+	}
+
+	public String getSipIdentity() {
+		return sipIdentity;
+	}
+
+	public void setSipDomain(String sipDomain) {
+		Log.d(TAG, "Setting sipDomain:" + sipDomain);
+		this.sipDomain = sipDomain;
+	}
+
+	public String getSipDomain() {
+		return sipDomain;
+	}
 }
