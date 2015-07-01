@@ -40,6 +40,7 @@ public class MainActivity extends ActionBarActivity implements OnClickListener,
 		static final String PASSWORD = "pref_sip_password";
 		static final String PROXY_IP = "pref_proxy_ip";
 		static final String PROXY_PORT = "pref_proxy_port";
+        static final String USE_ADVANCED = "pref_sip_use_advanced";
 	}
 
 
@@ -122,7 +123,18 @@ public class MainActivity extends ActionBarActivity implements OnClickListener,
 	@Override
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
 			String key) {
-		if (key.equals(Prefs.PROXY_IP)) {
+
+        if (key.equals(Prefs.USE_ADVANCED)) {
+            boolean useAdvanced = prefs.getBoolean(key, false);
+
+            if (useAdvanced == false) {
+                sipProfile.setSipUserName(prefs.getString(Prefs.USER, ""));
+            }
+            else {
+                sipProfile.setSipUserName(prefs.getString(Prefs.AUTH_USER, ""));
+            }
+        }
+		else if (key.equals(Prefs.PROXY_IP)) {
 			sipProfile.setRemoteIp((prefs.getString(key, "")));
 		} else if (key.equals(Prefs.PROXY_PORT)) {
 			sipProfile.setRemotePort(Integer.parseInt(prefs.getString(key, "5060")));
@@ -144,7 +156,12 @@ public class MainActivity extends ActionBarActivity implements OnClickListener,
 		sipProfile.setRemotePort(Integer.parseInt(prefs.getString(Prefs.PROXY_PORT, "5060")));
 		sipProfile.setSipIdentity(prefs.getString(Prefs.USER, "alice"));
 		sipProfile.setSipDomain(prefs.getString(Prefs.DOMAIN, "SIP domain"));
-		sipProfile.setSipUserName(prefs.getString(Prefs.AUTH_USER, "alice"));
+        if (prefs.getBoolean(Prefs.USE_ADVANCED, false) == false) {
+            sipProfile.setSipUserName(prefs.getString(Prefs.USER, "alice"));
+		}
+		else {
+			sipProfile.setSipUserName(prefs.getString(Prefs.AUTH_USER, "alice"));
+		}
 		sipProfile.setSipPassword(prefs.getString(Prefs.PASSWORD, "1234"));
 	}
 

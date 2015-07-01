@@ -3,7 +3,7 @@
 
     <PreferenceCategory
         android:key="sip_proxy_settings"
-        android:title="Sip Settings" >
+        android:title="SIP Settings" >
         <EditTextPreference
             android:defaultValue="alice"
             android:key="pref_sip_user"
@@ -13,22 +13,32 @@
             android:key="pref_sip_domain"
             android:title="SIP Domain" />
         <EditTextPreference
-            android:defaultValue="alice"
-            android:key="pref_sip_auth_user"
-            android:title="SIP Auth User" />
-        <EditTextPreference
             android:defaultValue="1234"
             android:key="pref_sip_password"
             android:title="Password" />
         <EditTextPreference
             android:defaultValue="192.168.10.100"
             android:key="pref_proxy_ip"
-            android:title="Proxy IP" />
+            android:title="Proxy host" />
         <EditTextPreference
             android:defaultValue="5060"
             android:key="pref_proxy_port"
             android:title="Proxy Port" />
      
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="sip_proxy_advanced_settings"
+        android:title="SIP Advanced Settings" >
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="pref_sip_use_advanced"
+            android:title="Use advanced settings"/>
+        <EditTextPreference
+            android:defaultValue="alice"
+            android:key="pref_sip_auth_user"
+            android:title="SIP Auth User"
+            android:dependency="pref_sip_use_advanced"/>
     </PreferenceCategory>
 
 </PreferenceScreen>
