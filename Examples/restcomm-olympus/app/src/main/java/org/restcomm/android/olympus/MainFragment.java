@@ -309,7 +309,7 @@ public class MainFragment extends ListFragment {
       alertDialog.show();
    }
 
-   public class ContactAdapter extends BaseAdapter {
+   public static class ContactAdapter extends BaseAdapter {
       private LayoutInflater mInflater;
       private ArrayList<Map<String, String>> contactList;
       private ContactAdapterListener listener;

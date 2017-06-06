@@ -73,4 +73,16 @@
         android:id="@+id/textView_sipuri"
         android:layout_gravity="center_horizontal" />
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Import all contacts from phone"
+        android:background="@drawable/custom_orange_button"
+        android:textColor="#fff"
+        android:textSize="10dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginLeft="20dp"
+        android:id="@+id/button_contactFromPhone"
+        android:elevation="4dp"/>
+
 </LinearLayout>
