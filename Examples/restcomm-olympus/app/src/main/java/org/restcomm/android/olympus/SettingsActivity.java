@@ -51,7 +51,7 @@ import org.restcomm.android.sdk.util.RCUtils;
 import java.util.HashMap;
 
 public class SettingsActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener,
-      ServiceConnection {
+        ServiceConnection {
    private SettingsFragment settingsFragment;
    SharedPreferences prefs;
    HashMap<String, Object> params;
@@ -62,8 +62,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
    private static final String TAG = "SettingsActivity";
 
    @Override
-   protected void onCreate(Bundle savedInstanceState)
-   {
+   protected void onCreate(Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
       setContentView(R.layout.activity_settings);
 
@@ -89,8 +88,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
       alertDialog = new AlertDialog.Builder(SettingsActivity.this, R.style.SimpleAlertStyle).create();
    }
 
-   protected void onResume()
-   {
+   protected void onResume() {
       super.onResume();
 
       Preference updatedPref = settingsFragment.findPreference(RCConnection.ParameterKeys.CONNECTION_PREFERRED_AUDIO_CODEC);
@@ -109,8 +107,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
    }
 
    @Override
-   protected void onStart()
-   {
+   protected void onStart() {
       super.onStart();
       Log.i(TAG, "%% onStart");
 
@@ -119,8 +116,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
    }
 
    @Override
-   protected void onStop()
-   {
+   protected void onStop() {
       super.onStop();
       Log.i(TAG, "%% onStop");
 
@@ -134,8 +130,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
 
    // Callbacks for service binding, passed to bindService()
    @Override
-   public void onServiceConnected(ComponentName className, IBinder service)
-   {
+   public void onServiceConnected(ComponentName className, IBinder service) {
       Log.i(TAG, "%% onServiceConnected");
       // We've bound to LocalService, cast the IBinder and get LocalService instance
       RCDevice.RCDeviceBinder binder = (RCDevice.RCDeviceBinder) service;
@@ -144,8 +139,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
       // We have the device reference
       if (device.getState() == RCDevice.DeviceState.OFFLINE) {
          getSupportActionBar().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.colorTextSecondary)));
-      }
-      else {
+      } else {
          getSupportActionBar().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.colorPrimary)));
       }
 
@@ -153,15 +147,13 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
    }
 
    @Override
-   public void onServiceDisconnected(ComponentName arg0)
-   {
+   public void onServiceDisconnected(ComponentName arg0) {
       Log.i(TAG, "%% onServiceDisconnected");
       serviceBound = false;
    }
 
    @Override
-   public boolean onOptionsItemSelected(MenuItem item)
-   {
+   public boolean onOptionsItemSelected(MenuItem item) {
       // Handle action bar item clicks here. The action bar will
       // automatically handle clicks on the Home/Up button, so long
       // as you specify a parent activity in AndroidManifest.xml.
@@ -171,16 +163,14 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
             ErrorStruct errorStruct = RCUtils.validateParms((HashMap<String, Object>) prefs.getAll());
             if (errorStruct.statusCode != RCClient.ErrorCodes.SUCCESS) {
                showOkAlert("Error saving Settings", errorStruct.statusText);
-            }
-            else {
+            } else {
                if (!device.updateParams(params)) {
                   // TODO:
                   //showOkAlert("RCDevice Error", "No Wifi connectivity");
                }
                NavUtils.navigateUpFromSameTask(this);
             }
-         }
-         else {
+         } else {
             NavUtils.navigateUpFromSameTask(this);
          }
 
@@ -192,69 +182,56 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
 
    @Override
    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
-                                         String key)
-   {
+                                         String key) {
       if (key.equals(RCDevice.ParameterKeys.SIGNALING_DOMAIN)) {
          params.put(RCDevice.ParameterKeys.SIGNALING_DOMAIN, prefs.getString(RCDevice.ParameterKeys.SIGNALING_DOMAIN, "sip:cloud.restcomm.com:5060"));
          updated = true;
-      }
-      else if (key.equals(RCDevice.ParameterKeys.SIGNALING_USERNAME)) {
+      } else if (key.equals(RCDevice.ParameterKeys.SIGNALING_USERNAME)) {
          params.put(RCDevice.ParameterKeys.SIGNALING_USERNAME, prefs.getString(RCDevice.ParameterKeys.SIGNALING_USERNAME, "android-sdk"));
          updated = true;
-      }
-      else if (key.equals(RCDevice.ParameterKeys.SIGNALING_PASSWORD)) {
+      } else if (key.equals(RCDevice.ParameterKeys.SIGNALING_PASSWORD)) {
          params.put(RCDevice.ParameterKeys.SIGNALING_PASSWORD, prefs.getString(RCDevice.ParameterKeys.SIGNALING_PASSWORD, "1234"));
          updated = true;
-      }
-      else if (key.equals(RCDevice.ParameterKeys.MEDIA_TURN_ENABLED)) {
+      } else if (key.equals(RCDevice.ParameterKeys.MEDIA_TURN_ENABLED)) {
          params.put(RCDevice.ParameterKeys.MEDIA_TURN_ENABLED, prefs.getBoolean(RCDevice.ParameterKeys.MEDIA_TURN_ENABLED, true));
          updated = true;
-      }
-      else if (key.equals(RCDevice.ParameterKeys.MEDIA_ICE_URL)) {
+      } else if (key.equals(RCDevice.ParameterKeys.MEDIA_ICE_URL)) {
          params.put(RCDevice.ParameterKeys.MEDIA_ICE_URL, prefs.getString(RCDevice.ParameterKeys.MEDIA_ICE_URL, ""));
          updated = true;
-      }
-      else if (key.equals(RCDevice.ParameterKeys.MEDIA_ICE_USERNAME)) {
+      } else if (key.equals(RCDevice.ParameterKeys.MEDIA_ICE_USERNAME)) {
          params.put(RCDevice.ParameterKeys.MEDIA_ICE_USERNAME, prefs.getString(RCDevice.ParameterKeys.MEDIA_ICE_USERNAME, ""));
          updated = true;
-      }
-      else if (key.equals(RCDevice.ParameterKeys.MEDIA_ICE_PASSWORD)) {
+      } else if (key.equals(RCDevice.ParameterKeys.MEDIA_ICE_PASSWORD)) {
          params.put(RCDevice.ParameterKeys.MEDIA_ICE_PASSWORD, prefs.getString(RCDevice.ParameterKeys.MEDIA_ICE_PASSWORD, ""));
          updated = true;
-      }
-      else if (key.equals(RCDevice.ParameterKeys.MEDIA_ICE_DOMAIN)) {
+      } else if (key.equals(RCDevice.ParameterKeys.MEDIA_ICE_DOMAIN)) {
          params.put(RCDevice.ParameterKeys.MEDIA_ICE_DOMAIN, prefs.getString(RCDevice.ParameterKeys.MEDIA_ICE_DOMAIN, ""));
          updated = true;
-      }
-      else if (key.equals(RCDevice.ParameterKeys.SIGNALING_SECURE_ENABLED)) {
+      } else if (key.equals(RCDevice.ParameterKeys.SIGNALING_SECURE_ENABLED)) {
          params.put(RCDevice.ParameterKeys.SIGNALING_SECURE_ENABLED, prefs.getBoolean(RCDevice.ParameterKeys.SIGNALING_SECURE_ENABLED, false));
          updated = true;
-      }
-      else if (key.equals(RCConnection.ParameterKeys.CONNECTION_PREFERRED_AUDIO_CODEC)) {
+      } else if (key.equals(RCConnection.ParameterKeys.CONNECTION_PREFERRED_AUDIO_CODEC)) {
          params.put(RCConnection.ParameterKeys.CONNECTION_PREFERRED_AUDIO_CODEC, prefs.getString(RCConnection.ParameterKeys.CONNECTION_PREFERRED_AUDIO_CODEC, "Default"));
          Preference updatedPref = settingsFragment.findPreference(key);
          if (updatedPref != null) {
             updatedPref.setSummary(prefs.getString(key, ""));
          }
          updated = true;
-      }
-      else if (key.equals(RCConnection.ParameterKeys.CONNECTION_PREFERRED_VIDEO_CODEC)) {
+      } else if (key.equals(RCConnection.ParameterKeys.CONNECTION_PREFERRED_VIDEO_CODEC)) {
          params.put(RCConnection.ParameterKeys.CONNECTION_PREFERRED_VIDEO_CODEC, prefs.getString(RCConnection.ParameterKeys.CONNECTION_PREFERRED_VIDEO_CODEC, "Default"));
          Preference updatedPref = settingsFragment.findPreference(key);
          if (updatedPref != null) {
             updatedPref.setSummary(prefs.getString(key, ""));
          }
          updated = true;
-      }
-      else if (key.equals(RCConnection.ParameterKeys.CONNECTION_PREFERRED_VIDEO_RESOLUTION)) {
+      } else if (key.equals(RCConnection.ParameterKeys.CONNECTION_PREFERRED_VIDEO_RESOLUTION)) {
          params.put(RCConnection.ParameterKeys.CONNECTION_PREFERRED_VIDEO_RESOLUTION, prefs.getString(RCConnection.ParameterKeys.CONNECTION_PREFERRED_VIDEO_RESOLUTION, "Default"));
          Preference updatedPref = settingsFragment.findPreference(key);
          if (updatedPref != null) {
             updatedPref.setSummary(prefs.getString(key, ""));
          }
          updated = true;
-      }
-      else if (key.equals(RCConnection.ParameterKeys.CONNECTION_PREFERRED_VIDEO_FRAME_RATE)) {
+      } else if (key.equals(RCConnection.ParameterKeys.CONNECTION_PREFERRED_VIDEO_FRAME_RATE)) {
          params.put(RCConnection.ParameterKeys.CONNECTION_PREFERRED_VIDEO_FRAME_RATE, prefs.getString(RCConnection.ParameterKeys.CONNECTION_PREFERRED_VIDEO_FRAME_RATE, "Default"));
          Preference updatedPref = settingsFragment.findPreference(key);
          if (updatedPref != null) {
@@ -272,14 +249,11 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
    }
 
 
-
-   private void showOkAlert(final String title, final String detail)
-   {
+   private void showOkAlert(final String title, final String detail) {
       alertDialog.setTitle(title);
       alertDialog.setMessage(detail);
       alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", new DialogInterface.OnClickListener() {
-         public void onClick(DialogInterface dialog, int which)
-         {
+         public void onClick(DialogInterface dialog, int which) {
             dialog.dismiss();
          }
       });

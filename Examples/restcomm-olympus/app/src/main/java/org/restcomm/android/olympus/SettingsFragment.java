@@ -33,47 +33,46 @@ import android.widget.Toast;
 import org.restcomm.android.sdk.RCDevice;
 
 public class SettingsFragment extends PreferenceFragment {
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+   @Override
+   public void onCreate(Bundle savedInstanceState) {
+      super.onCreate(savedInstanceState);
 
-        // Load the preferences from an XML resource
-        addPreferencesFromResource(R.xml.preferences);
+      // Load the preferences from an XML resource
+      addPreferencesFromResource(R.xml.preferences);
 
 
-        // ListPreference listPreference = (ListPreference) findPreference("account");
-        //  listPreference.setEntries(new String[] {"Hi","Hello"});
+      // ListPreference listPreference = (ListPreference) findPreference("account");
+      //  listPreference.setEntries(new String[] {"Hi","Hello"});
 
-        //listPreference.setEntryValues(new String[] {"Hey","Yo"});
+      //listPreference.setEntryValues(new String[] {"Hey","Yo"});
 
-        // setup listener to be used by all EditTextPreferences
-        Preference.OnPreferenceChangeListener listener = new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Boolean rtnval = true;
+      // setup listener to be used by all EditTextPreferences
+      Preference.OnPreferenceChangeListener listener = new Preference.OnPreferenceChangeListener() {
+         @Override
+         public boolean onPreferenceChange(Preference preference, Object newValue) {
+            Boolean rtnval = true;
 
-                // don't touch non string preferences and just return true
-                if (!(newValue instanceof String)) {
-                    return true;
-                }
-
-                String value = (String) newValue;
-                if (value.contains(" ")) {
-                    final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                    builder.setTitle(preference.getTitle() + " validation error");
-                    builder.setMessage("Should not contain space(s); edit was canceled");
-                    builder.setPositiveButton(android.R.string.ok, null);
-                    builder.show();
-                    rtnval = false;
-                }
-                return rtnval;
+            // don't touch non string preferences and just return true
+            if (!(newValue instanceof String)) {
+               return true;
             }
-        };
 
-        getPreferenceScreen().findPreference(RCDevice.ParameterKeys.SIGNALING_USERNAME).setOnPreferenceChangeListener(listener);
-        getPreferenceScreen().findPreference(RCDevice.ParameterKeys.SIGNALING_DOMAIN).setOnPreferenceChangeListener(listener);
+            String value = (String) newValue;
+            if (value.contains(" ")) {
+               final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+               builder.setTitle(preference.getTitle() + " validation error");
+               builder.setMessage("Should not contain space(s); edit was canceled");
+               builder.setPositiveButton(android.R.string.ok, null);
+               builder.show();
+               rtnval = false;
+            }
+            return rtnval;
+         }
+      };
 
-        getPreferenceScreen().findPreference("account").setOnPreferenceChangeListener(listener);
+      getPreferenceScreen().findPreference(RCDevice.ParameterKeys.SIGNALING_USERNAME).setOnPreferenceChangeListener(listener);
+      getPreferenceScreen().findPreference(RCDevice.ParameterKeys.SIGNALING_DOMAIN).setOnPreferenceChangeListener(listener);
+
 
 
       /*
@@ -102,7 +101,7 @@ public class SettingsFragment extends PreferenceFragment {
          }
       });
       */
-    }
+   }
 
 
 }

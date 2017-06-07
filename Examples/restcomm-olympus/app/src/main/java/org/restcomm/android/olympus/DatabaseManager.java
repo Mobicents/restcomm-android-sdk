@@ -39,32 +39,27 @@ public class DatabaseManager {
    private static DatabaseHelper databaseHelper = null;
    private static final String TAG = "DatabaseManager";
 
-   public static DatabaseManager getInstance()
-   {
+   public static DatabaseManager getInstance() {
       return instance;
    }
 
-   public DatabaseManager()
-   {
+   public DatabaseManager() {
    }
 
    // Before we can use Database manager we need to first call open() and pass Android context
-   public void open(Context context)
-   {
+   public void open(Context context) {
       if (databaseHelper == null) {
          Log.i(TAG, "Database hasn't been opened; opening now");
          // If this turns out to be slow, we might have to put it to background thread (AsyncTask, etc), but I think data are too little to cause us trouble
          databaseHelper = new DatabaseHelper(context);
-      }
-      else {
+      } else {
          Log.w(TAG, "Database is already open");
       }
    }
 
    // ---- Contacts table
    // Retrieve all contact entries from DB and return them
-   ArrayList<Map<String, String>> retrieveContacts()
-   {
+   ArrayList<Map<String, String>> retrieveContacts() {
       if (databaseHelper == null) {
          throw new RuntimeException("Database hasn't been opened yet, please call open()");
       }
@@ -75,12 +70,9 @@ public class DatabaseManager {
       // Define a projection that specifies which columns from the database
       // you will actually use after this query.
       String[] columns = {
-            DatabaseContract.ContactEntry.COLUMN_NAME_NAME,
-            DatabaseContract.ContactEntry.COLUMN_NAME_URI,
+              DatabaseContract.ContactEntry.COLUMN_NAME_NAME,
+              DatabaseContract.ContactEntry.COLUMN_NAME_URI,
       };
-
-
-
 
 
       // How you want the results sorted in the resulting Cursor
@@ -88,13 +80,13 @@ public class DatabaseManager {
 
       SQLiteDatabase db = databaseHelper.getReadableDatabase();
       Cursor cursor = db.query(
-            DatabaseContract.ContactEntry.TABLE_NAME,  // The table to query
-            columns,                                   // The columns to return
-            null,                                      // The columns for the WHERE clause
-            null,                                      // The values for the WHERE clause
-            null,                                      // don't group the rows
-            null,                                      // don't filter by row groups
-            null                                       // don't sort the results
+              DatabaseContract.ContactEntry.TABLE_NAME,  // The table to query
+              columns,                                   // The columns to return
+              null,                                      // The columns for the WHERE clause
+              null,                                      // The values for the WHERE clause
+              null,                                      // don't group the rows
+              null,                                      // don't filter by row groups
+              null                                       // don't sort the results
       );
 
       ArrayList<Map<String, String>> contactList = new ArrayList<Map<String, String>>();
@@ -104,7 +96,7 @@ public class DatabaseManager {
          // iterate the rows, read from db and populate contactList
          do {
             contactList.add(createContactEntry(cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.ContactEntry.COLUMN_NAME_NAME)),
-                  cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.ContactEntry.COLUMN_NAME_URI))));
+                    cursor.getString(cursor.getColumnIndexOrThrow(DatabaseContract.ContactEntry.COLUMN_NAME_URI))));
          } while (cursor.moveToNext());
       }
       cursor.close();
@@ -112,9 +104,10 @@ public class DatabaseManager {
       return contactList;
    }
 
+   //Method for adding account details to accounts.db
    public void addAccount(String username, String password, String domain) throws SQLException {
 
-      if(databaseHelper == null) {
+      if (databaseHelper == null) {
 
          throw new RuntimeException("Retry");
       }
@@ -122,16 +115,15 @@ public class DatabaseManager {
       SQLiteDatabase sqLiteDatabase = databaseHelper.getWritableDatabase();
       ContentValues contentValues = new ContentValues();
 
-      contentValues.put(DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_USERNAME,username);
-      contentValues.put(DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_PASSWORD,password);
-      contentValues.put(DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_DOMAIN,domain);
+      contentValues.put(DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_USERNAME, username);
+      contentValues.put(DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_PASSWORD, password);
+      contentValues.put(DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_DOMAIN, domain);
 
       sqLiteDatabase.insertOrThrow(DatabaseContract.AccountEntry.TABLE_NAME_ACCOUNTS, null, contentValues);
 
    }
 
-   public void addContact(String name, String uri) throws SQLException
-   {
+   public void addContact(String name, String uri) throws SQLException {
       if (databaseHelper == null) {
          throw new RuntimeException("Database hasn't been opened.");
       }
@@ -151,8 +143,7 @@ public class DatabaseManager {
     * Add contact if it doesn't exist already.
     * @return true if contact didn't exist (and hence was added), false if it existed
     */
-   public boolean addContactIfNeded(String uri)
-   {
+   public boolean addContactIfNeded(String uri) {
       if (databaseHelper == null) {
          throw new RuntimeException("Database hasn't been opened.");
       }
@@ -180,8 +171,7 @@ public class DatabaseManager {
 
    // Important: currently contactName passed by Application is in reality the user part of the sipuri, so to match a contact entry
    // we try with COLUMN_NAME_URI, not COLUMN_NAME_NAME
-   private int getContactIdFromName(String contactName)
-   {
+   private int getContactIdFromName(String contactName) {
       Cursor cursor = getContactFromName(contactName);
 
       /*
@@ -211,16 +201,14 @@ public class DatabaseManager {
       if (cursor.moveToFirst()) {
          int contactId = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseContract.ContactEntry._ID));
          return contactId;
-      }
-      else {
+      } else {
          return -1;
       }
    }
 
    // Important: currently contactName passed by Application is in reality the user part of the sipuri, so to match a contact entry
    // we try with COLUMN_NAME_URI, not COLUMN_NAME_NAME
-   private Cursor getContactFromName(String contactName)
-   {
+   private Cursor getContactFromName(String contactName) {
       // Only interested in the ID
       /*
       String[] columns = {
@@ -230,25 +218,24 @@ public class DatabaseManager {
 
       // Add the WHERE clause
       String selection = DatabaseContract.ContactEntry.COLUMN_NAME_URI + " LIKE ?";
-      String[] selectionArgs = { "%" + contactName + "%"};
+      String[] selectionArgs = {"%" + contactName + "%"};
 
       SQLiteDatabase db = databaseHelper.getReadableDatabase();
       Cursor cursor = db.query(
-            DatabaseContract.ContactEntry.TABLE_NAME,  // The table to query
-            null,                                      // The columns to return (all)
-            selection,                                 // The columns for the WHERE clause
-            selectionArgs,                             // The values for the WHERE clause
-            null,                                      // don't group the rows
-            null,                                      // don't filter by row groups
-            null,                                      // don't sort the results
-            "1"                                        // only keep one entry
+              DatabaseContract.ContactEntry.TABLE_NAME,  // The table to query
+              null,                                      // The columns to return (all)
+              selection,                                 // The columns for the WHERE clause
+              selectionArgs,                             // The values for the WHERE clause
+              null,                                      // don't group the rows
+              null,                                      // don't filter by row groups
+              null,                                      // don't sort the results
+              "1"                                        // only keep one entry
       );
 
       return cursor;
    }
 
-   private Cursor getContactFromUri(String uri)
-   {
+   private Cursor getContactFromUri(String uri) {
       // Only interested in the ID
       /*
       String[] columns = {
@@ -258,26 +245,25 @@ public class DatabaseManager {
 
       // Add the WHERE clause
       String selection = DatabaseContract.ContactEntry.COLUMN_NAME_URI + " LIKE ?";
-      String[] selectionArgs = { uri };
+      String[] selectionArgs = {uri};
 
       SQLiteDatabase db = databaseHelper.getReadableDatabase();
       Cursor cursor = db.query(
-            DatabaseContract.ContactEntry.TABLE_NAME,  // The table to query
-            null,                                      // The columns to return (all)
-            selection,                                 // The columns for the WHERE clause
-            selectionArgs,                             // The values for the WHERE clause
-            null,                                      // don't group the rows
-            null,                                      // don't filter by row groups
-            null,                                      // don't sort the results
-            "1"                                        // only keep one entry
+              DatabaseContract.ContactEntry.TABLE_NAME,  // The table to query
+              null,                                      // The columns to return (all)
+              selection,                                 // The columns for the WHERE clause
+              selectionArgs,                             // The values for the WHERE clause
+              null,                                      // don't group the rows
+              null,                                      // don't filter by row groups
+              null,                                      // don't sort the results
+              "1"                                        // only keep one entry
       );
 
       return cursor;
    }
 
    // Updates contact in DB. Returns -1 if contact is not found
-   public int updateContact(String name, String uri)
-   {
+   public int updateContact(String name, String uri) {
       if (databaseHelper == null) {
          throw new RuntimeException("Database hasn't been opened.");
       }
@@ -294,18 +280,18 @@ public class DatabaseManager {
 
       // Add the WHERE clause
       String selection = DatabaseContract.ContactEntry.COLUMN_NAME_NAME + " LIKE ?";
-      String[] selectionArgs = { name };
+      String[] selectionArgs = {name};
 
       int count = db.update(
-            DatabaseContract.ContactEntry.TABLE_NAME,
-            values,
-            selection,
-            selectionArgs);
+              DatabaseContract.ContactEntry.TABLE_NAME,
+              values,
+              selection,
+              selectionArgs);
 
       if (count > 0) {
          int i = 0;
          ArrayList<Map<String, String>> allContacts = retrieveContacts();
-         for (Map<String, String> item: allContacts) {
+         for (Map<String, String> item : allContacts) {
             if (item.get("username").equals(name)) {
                return i;
             }
@@ -317,8 +303,7 @@ public class DatabaseManager {
    }
 
    // Removes contact from DB. Returns -1 if contact is not found
-   public int removeContact(String name, String uri)
-   {
+   public int removeContact(String name, String uri) {
       if (databaseHelper == null) {
          throw new RuntimeException("Database hasn't been opened.");
       }
@@ -326,7 +311,7 @@ public class DatabaseManager {
       boolean found = false;
       int i = 0;
       ArrayList<Map<String, String>> allContacts = retrieveContacts();
-      for (Map<String, String> item: allContacts) {
+      for (Map<String, String> item : allContacts) {
          if (item.get("username").equals(name)) {
             found = true;
             break;
@@ -346,12 +331,12 @@ public class DatabaseManager {
 
       // Add the WHERE clause
       String selection = DatabaseContract.ContactEntry.COLUMN_NAME_NAME + " LIKE ?";
-      String[] selectionArgs = { name };
+      String[] selectionArgs = {name};
 
       int count = db.delete(
-            DatabaseContract.ContactEntry.TABLE_NAME,
-            selection,
-            selectionArgs);
+              DatabaseContract.ContactEntry.TABLE_NAME,
+              selection,
+              selectionArgs);
 
       if (count > 0) {
          return i;
@@ -363,8 +348,7 @@ public class DatabaseManager {
    // ---- Message table
    // Retrieve all messages for a contact ordered by timestamp
    //ArrayList<Map<String, String>> retrieveMessages(String contactName)
-   Cursor retrieveMessages(String contactName)
-   {
+   Cursor retrieveMessages(String contactName) {
       if (databaseHelper == null) {
          throw new RuntimeException("Database hasn't been opened yet, please call open()");
       }
@@ -372,14 +356,14 @@ public class DatabaseManager {
       SQLiteDatabase db = databaseHelper.getReadableDatabase();
 
       // Add the WHERE clause
-      String[] selectionArgs = { contactName };
+      String[] selectionArgs = {contactName};
 
       // Here's an example: SELECT * FROM message INNER JOIN contact ON message.contact_id = contact._id WHERE contact.name LIKE ? ORDER BY timestamp ASC
       String sqlQuery = "SELECT * FROM " + DatabaseContract.MessageEntry.TABLE_NAME + " INNER JOIN " +
-            DatabaseContract.ContactEntry.TABLE_NAME + " ON message." + DatabaseContract.MessageEntry.COLUMN_NAME_CONTACT_ID + " = contact." +
-            DatabaseContract.ContactEntry._ID + " " +
-            "WHERE " + DatabaseContract.ContactEntry.TABLE_NAME + "." + DatabaseContract.ContactEntry.COLUMN_NAME_NAME + " LIKE ? " +
-            "ORDER BY " + DatabaseContract.MessageEntry.COLUMN_NAME_TIMESTAMP + " ASC";
+              DatabaseContract.ContactEntry.TABLE_NAME + " ON message." + DatabaseContract.MessageEntry.COLUMN_NAME_CONTACT_ID + " = contact." +
+              DatabaseContract.ContactEntry._ID + " " +
+              "WHERE " + DatabaseContract.ContactEntry.TABLE_NAME + "." + DatabaseContract.ContactEntry.COLUMN_NAME_NAME + " LIKE ? " +
+              "ORDER BY " + DatabaseContract.MessageEntry.COLUMN_NAME_TIMESTAMP + " ASC";
 
       Log.i(TAG, "Query String: " + sqlQuery);
       Cursor cursor = db.rawQuery(sqlQuery, selectionArgs);
@@ -405,8 +389,7 @@ public class DatabaseManager {
       //return messageList;
    }
 
-   public void addMessage(String contactName, String messageText, boolean isLocal, String jobId, DatabaseContract.MessageDeliveryStatus deliveryStatus) throws SQLException
-   {
+   public void addMessage(String contactName, String messageText, boolean isLocal, String jobId, DatabaseContract.MessageDeliveryStatus deliveryStatus) throws SQLException {
       if (databaseHelper == null) {
          throw new RuntimeException("Database hasn't been opened.");
       }
@@ -433,8 +416,7 @@ public class DatabaseManager {
       db.insertOrThrow(DatabaseContract.MessageEntry.TABLE_NAME, null, values);
    }
 
-   public void updateMessageStatus(String jobId, DatabaseContract.MessageDeliveryStatus deliveryStatus) throws SQLException
-   {
+   public void updateMessageStatus(String jobId, DatabaseContract.MessageDeliveryStatus deliveryStatus) throws SQLException {
       if (databaseHelper == null) {
          throw new RuntimeException("Database hasn't been opened.");
       }
@@ -449,7 +431,7 @@ public class DatabaseManager {
 
       // Add the WHERE clause
       String selection = DatabaseContract.MessageEntry.COLUMN_NAME_JOB_ID + " LIKE ?";
-      String[] selectionArgs = { jobId };
+      String[] selectionArgs = {jobId};
 
       int count = db.update(
               DatabaseContract.MessageEntry.TABLE_NAME,
@@ -459,21 +441,18 @@ public class DatabaseManager {
    }
 
    // Helpers for adapters
-   private HashMap<String, String> createContactEntry(String name, String uri)
-   {
+   private HashMap<String, String> createContactEntry(String name, String uri) {
       HashMap<String, String> item = new HashMap<String, String>();
       item.put("username", name);
       item.put("sipuri", uri);
       return item;
    }
 
-   private HashMap<String, String> createMessageEntry(String type, String name, String message)
-   {
+   private HashMap<String, String> createMessageEntry(String type, String name, String message) {
       HashMap<String, String> item = new HashMap<String, String>();
       if (type.equals("local")) {
          item.put(MessageFragment.MESSAGE_CONTACT_KEY, "Me");
-      }
-      else {
+      } else {
          item.put(MessageFragment.MESSAGE_CONTACT_KEY, name);
       }
       item.put(MessageFragment.MESSAGE_TEXT_KEY, message);

@@ -20,12 +20,6 @@
             android:key="pref_proxy_domain"
             android:title="Domain"
             android:summary="Restcomm-Connect domain, like: 'cloud.restcomm.com'"/>
-        <ListPreference
-            android:defaultValue="Hello"
-            android:key="account"
-            android:title="Accounts"
-            android:summary="Switch between multiple accounts"
-            />
         <SwitchPreference
             android:defaultValue="true"
             android:key="signaling-secure"

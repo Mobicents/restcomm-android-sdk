@@ -99,13 +99,11 @@ public class MainFragment extends ListFragment {
     * Mandatory empty constructor for the fragment manager to instantiate the
     * fragment (e.g. upon screen orientation changes).
     */
-   public MainFragment()
-   {
+   public MainFragment() {
    }
 
    @Override
-   public void onCreate(Bundle savedInstanceState)
-   {
+   public void onCreate(Bundle savedInstanceState) {
       Log.i(TAG, "%% onCreate");
 
       super.onCreate(savedInstanceState);
@@ -120,8 +118,7 @@ public class MainFragment extends ListFragment {
    }
 
    @Override
-   public void onResume()
-   {
+   public void onResume() {
       Log.i(TAG, "%% onResume");
       super.onResume();
 
@@ -132,13 +129,12 @@ public class MainFragment extends ListFragment {
    }
 
    @Override
-   public void onViewCreated(View view, Bundle savedInstanceState)
-   {
+   public void onViewCreated(View view, Bundle savedInstanceState) {
       super.onViewCreated(view, savedInstanceState);
 
       // Restore the previously serialized activated item position.
       if (savedInstanceState != null
-            && savedInstanceState.containsKey(STATE_ACTIVATED_POSITION)) {
+              && savedInstanceState.containsKey(STATE_ACTIVATED_POSITION)) {
          setActivatedPosition(savedInstanceState.getInt(STATE_ACTIVATED_POSITION));
       }
 
@@ -155,8 +151,7 @@ public class MainFragment extends ListFragment {
    }
 
    @Override
-   public void onAttach(Activity activity)
-   {
+   public void onAttach(Activity activity) {
       Log.i(TAG, "%% onCreate");
       super.onAttach(activity);
 
@@ -169,8 +164,7 @@ public class MainFragment extends ListFragment {
    }
 
    @Override
-   public void onDetach()
-   {
+   public void onDetach() {
       Log.i(TAG, "%% onCreate");
       super.onDetach();
 
@@ -179,8 +173,7 @@ public class MainFragment extends ListFragment {
    }
 
    @Override
-   public void onListItemClick(ListView listView, View view, int position, long id)
-   {
+   public void onListItemClick(ListView listView, View view, int position, long id) {
       super.onListItemClick(listView, view, position, id);
 
       HashMap item = (HashMap) getListView().getItemAtPosition(position);
@@ -190,8 +183,7 @@ public class MainFragment extends ListFragment {
    }
 
    @Override
-   public void onSaveInstanceState(Bundle outState)
-   {
+   public void onSaveInstanceState(Bundle outState) {
       super.onSaveInstanceState(outState);
       if (mActivatedPosition != ListView.INVALID_POSITION) {
          // Serialize and persist the activated item position.
@@ -203,21 +195,18 @@ public class MainFragment extends ListFragment {
     * Turns on activate-on-click mode. When this mode is on, list items will be
     * given the 'activated' state when touched.
     */
-   public void setActivateOnItemClick(boolean activateOnItemClick)
-   {
+   public void setActivateOnItemClick(boolean activateOnItemClick) {
       // When setting CHOICE_MODE_SINGLE, ListView will automatically
       // give items the 'activated' state when touched.
       getListView().setChoiceMode(activateOnItemClick
-            ? ListView.CHOICE_MODE_SINGLE
-            : ListView.CHOICE_MODE_NONE);
+              ? ListView.CHOICE_MODE_SINGLE
+              : ListView.CHOICE_MODE_NONE);
    }
 
-   private void setActivatedPosition(int position)
-   {
+   private void setActivatedPosition(int position) {
       if (position == ListView.INVALID_POSITION) {
          getListView().setItemChecked(mActivatedPosition, false);
-      }
-      else {
+      } else {
          getListView().setItemChecked(position, true);
       }
 
@@ -226,8 +215,7 @@ public class MainFragment extends ListFragment {
 
    // Context Menu stuff
    @Override
-   public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo)
-   {
+   public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
       if (v.getId() == android.R.id.list) {
          AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
 
@@ -241,8 +229,7 @@ public class MainFragment extends ListFragment {
    }
 
    @Override
-   public boolean onContextItemSelected(MenuItem item)
-   {
+   public boolean onContextItemSelected(MenuItem item) {
       AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
       HashMap<String, String> contact = (HashMap) contactList.get(info.position);
 
@@ -258,24 +245,20 @@ public class MainFragment extends ListFragment {
    }
 
    // Called by Activity when contact is to be updated
-   public void updateContact(int type, String username, String sipuri)
-   {
+   public void updateContact(int type, String username, String sipuri) {
       if (type == AddUserDialogFragment.DIALOG_TYPE_ADD_CONTACT) {
          if (username.isEmpty() || sipuri.isEmpty()) {
             showOkAlert("Addition Cancelled", "Both Username and SIP URI fields must be provided");
             return;
-         }
-         else {
+         } else {
             try {
                this.contactsController.addContact(contactList, username, sipuri);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                showOkAlert("Failed to add contact", e.getMessage());
                return;
             }
          }
-      }
-      else {
+      } else {
          if (this.contactsController.updateContact(contactList, username, sipuri) == -1) {
             // no contact was updated, no need to upate listAdapter
             return;
@@ -295,14 +278,12 @@ public class MainFragment extends ListFragment {
    */
 
    // Helper methods
-   private void showOkAlert(final String title, final String detail)
-   {
+   private void showOkAlert(final String title, final String detail) {
       AlertDialog alertDialog = new AlertDialog.Builder(getActivity(), R.style.SimpleAlertStyle).create();
       alertDialog.setTitle(title);
       alertDialog.setMessage(detail);
       alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK", new DialogInterface.OnClickListener() {
-         public void onClick(DialogInterface dialog, int which)
-         {
+         public void onClick(DialogInterface dialog, int which) {
             dialog.dismiss();
          }
       });
@@ -314,34 +295,29 @@ public class MainFragment extends ListFragment {
       private ArrayList<Map<String, String>> contactList;
       private ContactAdapterListener listener;
 
-      public ContactAdapter(Context context, ArrayList<Map<String, String>> contactList)
-      {
+      public ContactAdapter(Context context, ArrayList<Map<String, String>> contactList) {
          mInflater = LayoutInflater.from(context);
          this.contactList = contactList;
          //this.listener = listener;
       }
 
       @Override
-      public int getCount()
-      {
+      public int getCount() {
          return contactList.size();
       }
 
       @Override
-      public Object getItem(int position)
-      {
+      public Object getItem(int position) {
          return contactList.get(position);
       }
 
       @Override
-      public long getItemId(int position)
-      {
+      public long getItemId(int position) {
          return position;
       }
 
       @Override
-      public View getView(int position, View convertView, ViewGroup parent)
-      {
+      public View getView(int position, View convertView, ViewGroup parent) {
          View view;
          ViewHolder holder;
          if (convertView == null) {
@@ -351,8 +327,7 @@ public class MainFragment extends ListFragment {
             holder.sipuri = (TextView) view.findViewById(R.id.contact_sipuri);
             //((ImageButton) view.findViewById(R.id.btn_accessory)).setOnClickListener(ContactButtonClickListener);
             view.setTag(holder);
-         }
-         else {
+         } else {
             view = convertView;
             holder = (ViewHolder) view.getTag();
          }
