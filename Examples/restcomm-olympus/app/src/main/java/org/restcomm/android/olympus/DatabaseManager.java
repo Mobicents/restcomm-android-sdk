@@ -34,7 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 // Provides access to DB facilities
-class DatabaseManager {
+public class DatabaseManager {
    private static DatabaseManager instance = new DatabaseManager();
    private static DatabaseHelper databaseHelper = null;
    private static final String TAG = "DatabaseManager";
@@ -44,7 +44,7 @@ class DatabaseManager {
       return instance;
    }
 
-   private DatabaseManager()
+   public DatabaseManager()
    {
    }
 
@@ -79,6 +79,10 @@ class DatabaseManager {
             DatabaseContract.ContactEntry.COLUMN_NAME_URI,
       };
 
+
+
+
+
       // How you want the results sorted in the resulting Cursor
       //String sortOrder = DatabaseContract.ContactEntry.COLUMN_NAME_NAME + " ASC";
 
@@ -106,6 +110,24 @@ class DatabaseManager {
       cursor.close();
 
       return contactList;
+   }
+
+   public void addAccount(String username, String password, String domain) throws SQLException {
+
+      if(databaseHelper == null) {
+
+         throw new RuntimeException("Retry");
+      }
+
+      SQLiteDatabase sqLiteDatabase = databaseHelper.getWritableDatabase();
+      ContentValues contentValues = new ContentValues();
+
+      contentValues.put(DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_USERNAME,username);
+      contentValues.put(DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_PASSWORD,password);
+      contentValues.put(DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_DOMAIN,domain);
+
+      sqLiteDatabase.insertOrThrow(DatabaseContract.AccountEntry.TABLE_NAME_ACCOUNTS, null, contentValues);
+
    }
 
    public void addContact(String name, String uri) throws SQLException

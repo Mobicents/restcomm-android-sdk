@@ -24,6 +24,7 @@ package org.restcomm.android.olympus;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
@@ -36,6 +37,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
    private static final String TAG = "DatabaseHelper";
 
+   public static final String DATABASE_NAME_ACCOUNTS = "Olympus_Accounts.db";
+
    //private static final String TEXT_TYPE = " TEXT";
    //private static final String COMMA_SEP = ",";
    private static final String SQL_CREATE_CONTACT_TABLE =
@@ -44,6 +47,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                DatabaseContract.ContactEntry.COLUMN_NAME_NAME + " TEXT NOT NULL UNIQUE, " +
                DatabaseContract.ContactEntry.COLUMN_NAME_URI + " TEXT NOT NULL" +
                " );";
+
+   public static final String SQL_CREATE_ACCOUNTS_TABLE =
+           "CREATE TABLE " + DatabaseContract.AccountEntry.TABLE_NAME_ACCOUNTS + " (" +
+                   DatabaseContract.AccountEntry._ID + " INTEGER PRIMARY KEY," +
+                   DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_USERNAME + " TEXT NOT NULL UNIQUE, " +
+                   DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_PASSWORD + " TEXT NOT NULL, " +
+                   DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_DOMAIN + " TEXT NOT NULL );";
 
    private static final String SQL_CREATE_MESSAGE_TABLE =
          "CREATE TABLE " + DatabaseContract.MessageEntry.TABLE_NAME + " (" +

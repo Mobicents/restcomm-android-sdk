@@ -22,16 +22,20 @@
 
 package org.restcomm.android.olympus;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatDialogFragment;
 import android.view.View;
 import android.widget.Button;
@@ -51,6 +55,7 @@ public class AddUserDialogFragment extends AppCompatDialogFragment {
     private ArrayList<Map<String, String>> contactList;
     // Use this instance of the interface to deliver action events
     ContactDialogListener listener;
+    private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 56;
 
     public Button buttonImportUsers;
 
@@ -177,6 +182,8 @@ public class AddUserDialogFragment extends AppCompatDialogFragment {
 
     private void importContacts() {
 
+        checkPermissions();
+
         final MainFragment.ContactAdapter contactAdapter = new MainFragment.ContactAdapter(getContext(), contactList);
         final Cursor phones = getContext().getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
         final ContactsController contactsController = new ContactsController(getContext());
@@ -207,5 +214,32 @@ public class AddUserDialogFragment extends AppCompatDialogFragment {
         });
 
 
+    }
+    public void checkPermissions() {
+
+
+        if (ContextCompat.checkSelfPermission(getContext(),
+                Manifest.permission.READ_CONTACTS)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
+                    Manifest.permission.READ_CONTACTS)) {
+
+                //Don't need to add anything over here for now --Sagar Vakkala
+
+            } else {
+
+                //Didn't add any explanation right now --Sagar Vakkala
+
+                ActivityCompat.requestPermissions(getActivity(),
+                        new String[]{Manifest.permission.READ_CONTACTS},
+                        MY_PERMISSIONS_REQUEST_READ_CONTACTS);
+
+                //Requesting permissions for reading contacts
+
+
+            }
+        }
     }
 }

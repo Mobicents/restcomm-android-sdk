@@ -40,6 +40,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import org.restcomm.android.sdk.RCClient;
 import org.restcomm.android.sdk.RCConnection;
@@ -188,6 +189,7 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
       return super.onOptionsItemSelected(item);
    }
 
+
    @Override
    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
                                          String key)
@@ -260,7 +262,16 @@ public class SettingsActivity extends AppCompatActivity implements SharedPrefere
          }
          updated = true;
       }
+
+     /*else if (key.equals("account")) {
+
+         Toast.makeText(getApplicationContext(),"Hello",Toast.LENGTH_SHORT).show();
+      }
+
+      */
    }
+
+
 
    private void showOkAlert(final String title, final String detail)
    {

@@ -25,6 +25,9 @@ package org.restcomm.android.olympus;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -37,6 +40,7 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.restcomm.android.sdk.RCDevice;
 
@@ -45,155 +49,184 @@ import org.restcomm.android.sdk.RCDevice;
  */
 public class SigninActivity extends AppCompatActivity {
 
-   SharedPreferences prefs;
-   // UI references.
-   private EditText txtUsername;
-   private EditText txtPassword;
-   private EditText txtDomain;
-   private static final String TAG = "ContactsController";
-   //private static final String PREFS_NAME = "general-prefs.xml";
-   //private static final String PREFS_SIGNED_UP_KEY = "user-signed-up";
-   //private static final String PREFS_EXTERNAL_CALL_URI = "external-call-uri";
-   private Context context;
-   GlobalPreferences globalPreferences;
+    SharedPreferences prefs;
+    // UI references.
+    private EditText txtUsername;
+    private EditText txtPassword;
+    private EditText txtDomain;
+    private static final String TAG = "ContactsController";
+    //private static final String PREFS_NAME = "general-prefs.xml";
+    //private static final String PREFS_SIGNED_UP_KEY = "user-signed-up";
+    //private static final String PREFS_EXTERNAL_CALL_URI = "external-call-uri";
+    private Context context;
+    GlobalPreferences globalPreferences;
 
-   //SharedPreferences prefsGeneral = null;
+    //SharedPreferences prefsGeneral = null;
 
-   @Override
-   protected void onCreate(Bundle savedInstanceState)
-   {
-      Log.i(TAG, "%% onCreate");
+    DatabaseHelper dbHelper;
+    DatabaseContract dbContract;
+    DatabaseManager dbManager;
+    SQLiteDatabase db;
 
-      super.onCreate(savedInstanceState);
-      setContentView(R.layout.activity_signin);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        Log.i(TAG, "%% onCreate");
 
-      globalPreferences = new GlobalPreferences(getApplicationContext());
-      // Check if
-      //prefsGeneral = this.getSharedPreferences(PREFS_NAME, 0);
-      //boolean signedUp = prefsGeneral.getBoolean(PREFS_SIGNED_UP_KEY, false);
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_signin);
 
-      // see if we are called from an external App trying to make a call
-      if (getIntent().getAction().equals(Intent.ACTION_CALL) && getIntent().getData() != null) {
-         if (getIntent().getData() != null) {
+        dbHelper = new DatabaseHelper(this);
+        db = dbHelper.getWritableDatabase();
+
+        globalPreferences = new GlobalPreferences(getApplicationContext());
+        // Check if
+        //prefsGeneral = this.getSharedPreferences(PREFS_NAME, 0);
+        //boolean signedUp = prefsGeneral.getBoolean(PREFS_SIGNED_UP_KEY, false);
+
+        // see if we are called from an external App trying to make a call
+        if (getIntent().getAction().equals(Intent.ACTION_CALL) && getIntent().getData() != null) {
+            if (getIntent().getData() != null) {
+                // note down the fact that we are signed up so that
+                //SharedPreferences.Editor prefEdit = prefsGeneral.edit();
+                //prefEdit.putString(PREFS_EXTERNAL_CALL_URI, getIntent().getData().getHost());
+                //prefEdit.apply();
+                globalPreferences.setExternalCallUri(getIntent().getData().toString());
+            }
+        }
+
+        if (globalPreferences.haveSignedUp()) {
+            // we have already sign up, skip this activity and fire up MainActivity
+            Intent intent = new Intent(this, MainActivity.class);
+            // needed to avoid extreme flashing when the App starts up without signing up
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            finish();
+            startActivity(intent);
+            // needed to avoid extreme flashing when the App starts up without signing up
+            overridePendingTransition(0, 0);
+        } else {
+            txtUsername = (EditText) findViewById(R.id.signin_username);
+            txtPassword = (EditText) findViewById(R.id.signin_password);
+            txtDomain = (EditText) findViewById(R.id.signin_domain);
+            Button mSigninButton = (Button) findViewById(R.id.signin_button);
+
+            txtPassword.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
+                    if (id == R.id.login || id == EditorInfo.IME_NULL) {
+                        attemptLogin();
+                        return true;
+                    }
+                    return false;
+                }
+            });
+
+            mSigninButton.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    attemptLogin();
+                }
+            });
+
+            PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+            prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+            txtUsername.setText(prefs.getString(RCDevice.ParameterKeys.SIGNALING_USERNAME, ""));
+            txtDomain.setText(prefs.getString(RCDevice.ParameterKeys.SIGNALING_DOMAIN, ""));
+            txtPassword.setText(prefs.getString(RCDevice.ParameterKeys.SIGNALING_PASSWORD, ""));
+        }
+
+        checkDatabase();
+    }
+
+    private void checkDatabase() {
+        String[] columnsAccounts = {
+                DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_USERNAME,
+                DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_PASSWORD,
+                DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_DOMAIN
+
+        };
+        Toast.makeText(getApplicationContext(),"Welcome to Olympus!",Toast.LENGTH_SHORT).show();
+        try {
+            db.execSQL(DatabaseHelper.SQL_CREATE_ACCOUNTS_TABLE);
+        }
+        catch(SQLException e) {
+
+            if(e.toString().contains("exists")) {
+
+                Toast.makeText(getApplicationContext(),"Accounts detected",Toast.LENGTH_SHORT).show();
+            }
+
+        }
+
+
+
+        db.close();
+
+    }
+
+    private void attemptLogin() {
+        // Reset errors.
+        txtUsername.setError(null);
+        txtPassword.setError(null);
+        txtDomain.setError(null);
+
+        // Store values at the time of the login attempt.
+        String username = txtUsername.getText().toString();
+        String password = txtPassword.getText().toString();
+        String domain = txtDomain.getText().toString();
+
+        boolean cancel = false;
+        View focusView = null;
+
+        // Check for a valid email address.
+        if (TextUtils.isEmpty(username)) {
+            txtUsername.setError(getString(R.string.error_field_required));
+            focusView = txtUsername;
+            cancel = true;
+        } else if (TextUtils.isEmpty(domain)) {
+            txtDomain.setError(getString(R.string.error_invalid_email));
+            focusView = txtDomain;
+            cancel = true;
+        } else if (username.contains(" ")) {
+            txtUsername.setError(getString(R.string.error_field_no_whitespace));
+            focusView = txtUsername;
+            cancel = true;
+        } else if (domain.contains(" ")) {
+            txtDomain.setError(getString(R.string.error_field_no_whitespace));
+            focusView = txtDomain;
+            cancel = true;
+        }
+
+        if (cancel) {
+            // There was an error; don't attempt login and focus the first
+            // form field with an error.
+            focusView.requestFocus();
+        } else {
             // note down the fact that we are signed up so that
-            //SharedPreferences.Editor prefEdit = prefsGeneral.edit();
-            //prefEdit.putString(PREFS_EXTERNAL_CALL_URI, getIntent().getData().getHost());
-            //prefEdit.apply();
-            globalPreferences.setExternalCallUri(getIntent().getData().toString());
-         }
-      }
+            globalPreferences.setSignedUp(true);
 
-      if (globalPreferences.haveSignedUp()) {
-         // we have already sign up, skip this activity and fire up MainActivity
-         Intent intent = new Intent(this, MainActivity.class);
-         // needed to avoid extreme flashing when the App starts up without signing up
-         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-         finish();
-         startActivity(intent);
-         // needed to avoid extreme flashing when the App starts up without signing up
-         overridePendingTransition(0, 0);
-      }
-      else {
-         txtUsername = (EditText) findViewById(R.id.signin_username);
-         txtPassword = (EditText) findViewById(R.id.signin_password);
-         txtDomain = (EditText) findViewById(R.id.signin_domain);
-         Button mSigninButton = (Button) findViewById(R.id.signin_button);
+            // values are valid let's update prefs
+            updatePrefs();
+            dbManager = new DatabaseManager();
+            dbManager.open(getApplicationContext());
+            dbManager.addAccount(username,password,domain);
+            Intent intent = new Intent(this, MainActivity.class);
+            //intent.setAction(RCDevice.ACTION_OUTGOING_CALL);
+            //intent.putExtra(RCDevice.EXTRA_DID, sipuri);
+            //intent.putExtra(RCDevice.EXTRA_VIDEO_ENABLED, true);
+            startActivity(intent);
+            //startActivityForResult(intent, CONNECTION_REQUEST);
+        }
+    }
 
-         txtPassword.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent)
-            {
-               if (id == R.id.login || id == EditorInfo.IME_NULL) {
-                  attemptLogin();
-                  return true;
-               }
-               return false;
-            }
-         });
+    private void updatePrefs() {
+        SharedPreferences.Editor prefEdit = prefs.edit();
 
-         mSigninButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view)
-            {
-               attemptLogin();
-            }
-         });
+        prefEdit.putString(RCDevice.ParameterKeys.SIGNALING_USERNAME, txtUsername.getText().toString());
+        prefEdit.putString(RCDevice.ParameterKeys.SIGNALING_PASSWORD, txtPassword.getText().toString());
+        prefEdit.putString(RCDevice.ParameterKeys.SIGNALING_DOMAIN, txtDomain.getText().toString());
 
-         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
-         prefs = PreferenceManager.getDefaultSharedPreferences(this);
-
-         txtUsername.setText(prefs.getString(RCDevice.ParameterKeys.SIGNALING_USERNAME, ""));
-         txtDomain.setText(prefs.getString(RCDevice.ParameterKeys.SIGNALING_DOMAIN, ""));
-         txtPassword.setText(prefs.getString(RCDevice.ParameterKeys.SIGNALING_PASSWORD, ""));
-      }
-   }
-
-   private void attemptLogin()
-   {
-      // Reset errors.
-      txtUsername.setError(null);
-      txtPassword.setError(null);
-      txtDomain.setError(null);
-
-      // Store values at the time of the login attempt.
-      String username = txtUsername.getText().toString();
-      String password = txtPassword.getText().toString();
-      String domain = txtDomain.getText().toString();
-
-      boolean cancel = false;
-      View focusView = null;
-
-      // Check for a valid email address.
-      if (TextUtils.isEmpty(username)) {
-         txtUsername.setError(getString(R.string.error_field_required));
-         focusView = txtUsername;
-         cancel = true;
-      }
-      else if (TextUtils.isEmpty(domain)) {
-         txtDomain.setError(getString(R.string.error_invalid_email));
-         focusView = txtDomain;
-         cancel = true;
-      }
-      else if (username.contains(" ")) {
-         txtUsername.setError(getString(R.string.error_field_no_whitespace));
-         focusView = txtUsername;
-         cancel = true;
-      }
-      else if (domain.contains(" ")) {
-         txtDomain.setError(getString(R.string.error_field_no_whitespace));
-         focusView = txtDomain;
-         cancel = true;
-      }
-
-      if (cancel) {
-         // There was an error; don't attempt login and focus the first
-         // form field with an error.
-         focusView.requestFocus();
-      }
-      else {
-         // note down the fact that we are signed up so that
-         globalPreferences.setSignedUp(true);
-
-         // values are valid let's update prefs
-         updatePrefs();
-         Intent intent = new Intent(this, MainActivity.class);
-         //intent.setAction(RCDevice.ACTION_OUTGOING_CALL);
-         //intent.putExtra(RCDevice.EXTRA_DID, sipuri);
-         //intent.putExtra(RCDevice.EXTRA_VIDEO_ENABLED, true);
-         startActivity(intent);
-         //startActivityForResult(intent, CONNECTION_REQUEST);
-      }
-   }
-
-   private void updatePrefs()
-   {
-      SharedPreferences.Editor prefEdit = prefs.edit();
-
-      prefEdit.putString(RCDevice.ParameterKeys.SIGNALING_USERNAME, txtUsername.getText().toString());
-      prefEdit.putString(RCDevice.ParameterKeys.SIGNALING_PASSWORD, txtPassword.getText().toString());
-      prefEdit.putString(RCDevice.ParameterKeys.SIGNALING_DOMAIN, txtDomain.getText().toString());
-
-      prefEdit.apply();
-   }
+        prefEdit.apply();
+    }
 }
 

@@ -34,6 +34,8 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -85,6 +87,10 @@ public class MainActivity extends AppCompatActivity
     private RCConnectivityStatus previousConnectivityStatus = RCConnectivityStatus.RCConnectivityStatusNone;
     private static final String APP_VERSION = "Restcomm Android Olympus Client " + BuildConfig.VERSION_NAME + "#" + BuildConfig.VERSION_CODE; //"Restcomm Android Olympus Client 1.0.0-BETA4#20";
     FloatingActionButton btnAdd;
+
+    DatabaseManager dbManager;
+    DatabaseHelper dbHelper;
+    SQLiteDatabase database;
     public static String ACTION_DISCONNECTED_BACKGROUND = "org.restcomm.android.olympus.ACTION_DISCONNECTED_BACKGROUND";
 
     private static final int CONNECTION_REQUEST = 1;
@@ -107,6 +113,9 @@ public class MainActivity extends AppCompatActivity
         toolbar.setNavigationIcon(R.drawable.bar_icon_24dp);
         toolbar.setTitle(getTitle());
 
+        dbHelper = new DatabaseHelper(this);
+        database = dbHelper.getWritableDatabase();
+
         listFragment = (MainFragment) getSupportFragmentManager().findFragmentById(R.id.item_list);
 
         btnAdd = (FloatingActionButton) findViewById(R.id.imageButton_add);
@@ -120,6 +129,8 @@ public class MainActivity extends AppCompatActivity
         // preferences
         prefs.registerOnSharedPreferenceChangeListener(this);
 
+
+
         checkPermissions();
         // No longer needed, we'll change with toast
         // set it to wifi by default to avoid the status message when starting with wifi
@@ -127,6 +138,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void checkPermissions() {
+
 
         if (ContextCompat.checkSelfPermission(getApplicationContext(),
                 Manifest.permission.READ_CONTACTS)
@@ -180,6 +192,26 @@ public class MainActivity extends AppCompatActivity
         super.onPause();
         // Another activity is taking focus (this activity is about to be "paused").
         Log.i(TAG, "%% onPause");
+    }
+
+    public Cursor fetch() {
+
+        String[] columnsAccounts = {
+                DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_USERNAME,
+                DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_PASSWORD,
+                DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_DOMAIN
+
+        };
+
+        Cursor cursor = database.query(DatabaseContract.AccountEntry.TABLE_NAME_ACCOUNTS,columnsAccounts,null,null,null,null,null);
+
+        if(cursor != null) {
+
+            cursor.moveToFirst();
+        }
+
+        return cursor;
+
     }
 
     @Override
