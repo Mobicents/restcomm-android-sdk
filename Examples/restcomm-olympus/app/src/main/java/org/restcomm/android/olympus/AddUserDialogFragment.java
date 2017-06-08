@@ -22,15 +22,31 @@
 
 package org.restcomm.android.olympus;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatDialogFragment;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
+
+import org.apache.log4j.chainsaw.Main;
+
+import java.util.ArrayList;
+import java.util.Map;
 
 import static org.restcomm.android.olympus.ContactsController.CONTACT_KEY;
 import static org.restcomm.android.olympus.ContactsController.CONTACT_VALUE;
@@ -38,11 +54,17 @@ import static org.restcomm.android.olympus.ContactsController.CONTACT_VALUE;
 public class AddUserDialogFragment extends AppCompatDialogFragment {
    public static final int DIALOG_TYPE_ADD_CONTACT = 0;
    public static final int DIALOG_TYPE_UPDATE_CONTACT = 1;
-   EditText txtUsername;
-   EditText txtSipuri;
+
+   private ArrayList<Map<String, String>> contactList;
    // Use this instance of the interface to deliver action events
    ContactDialogListener listener;
+   private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 56;
 
+   //Defining Button and EditText variables
+   public Button buttonImportUsers;
+   EditText txtUsername;
+   EditText txtSipuri;
+   boolean permissionsStatus = false;
 
    /* The activity that creates an instance of this dialog fragment must
     * implement this interface in order to receive event callbacks.
@@ -57,8 +79,7 @@ public class AddUserDialogFragment extends AppCompatDialogFragment {
     * Create a new instance of MyDialogFragment, providing "num"
     * as an argument.
     */
-   public static AddUserDialogFragment newInstance(int type, String username, String sipuri)
-   {
+   public static AddUserDialogFragment newInstance(int type, String username, String sipuri) {
       AddUserDialogFragment f = new AddUserDialogFragment();
 
       // Supply num input as an argument.
@@ -75,31 +96,27 @@ public class AddUserDialogFragment extends AppCompatDialogFragment {
 
    // Override the Fragment.onAttach() method to instantiate the NoticeDialogListener
    @Override
-   public void onAttach(Activity activity)
-   {
+   public void onAttach(Activity activity) {
       super.onAttach(activity);
       // Verify that the host activity implements the callback interface
       try {
          // Instantiate the NoticeDialogListener so we can send events to the host
          listener = (ContactDialogListener) activity;
-      }
-      catch (ClassCastException e) {
+      } catch (ClassCastException e) {
          // The activity doesn't implement the interface, throw exception
          throw new ClassCastException(activity.toString()
-               + " must implement ContactDialogListener");
+                 + " must implement ContactDialogListener");
       }
    }
 
    @Override
-   public void onDetach()
-   {
+   public void onDetach() {
       super.onDetach();
       listener = null;
    }
 
    @Override
-   public void onCreate(Bundle savedInstanceState)
-   {
+   public void onCreate(Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
 
    }
@@ -119,12 +136,12 @@ public class AddUserDialogFragment extends AppCompatDialogFragment {
    // Notice that for this doesn't work if onCreateView has been overriden as described above. To add
    // custom view when using alert we need to use builder.setView() as seen below
    @Override
-   public Dialog onCreateDialog(Bundle savedInstanceState)
-   {
+   public Dialog onCreateDialog(Bundle savedInstanceState) {
       // Get the layout inflater
       View view = getActivity().getLayoutInflater().inflate(R.layout.fragment_dialog_add_contact, null);
       txtUsername = (EditText) view.findViewById(R.id.editText_username);
       txtSipuri = (EditText) view.findViewById(R.id.editText_sipuri);
+      buttonImportUsers = (Button) view.findViewById(R.id.button_contactFromPhone);
 
       String title = "Add Contact";
       String positiveText = "Add";
@@ -138,29 +155,129 @@ public class AddUserDialogFragment extends AppCompatDialogFragment {
          txtUsername.setEnabled(false);
       }
 
+      buttonImportUsers.setOnClickListener(new View.OnClickListener() {
+         @Override
+         public void onClick(View view) {
+            importContacts();
+         }
+      });
+
       AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.AppCompatAlertDialogStyle);
+
+      //Checking if we have the permission to read contacts when the dialog gets invoked
+
 
       // Inflate and set the layout for the dialog
       // Pass null as the parent view because its going in the dialog layout
       builder.setView(view)
-            .setTitle(title)
-            .setPositiveButton(positiveText,
-                  new DialogInterface.OnClickListener() {
-                     public void onClick(DialogInterface dialog, int whichButton)
-                     {
-                        listener.onDialogPositiveClick(getArguments().getInt("type"), txtUsername.getText().toString(),
-                              txtSipuri.getText().toString());
-                     }
-                  }
-            )
-            .setNegativeButton("Cancel",
-                  new DialogInterface.OnClickListener() {
-                     public void onClick(DialogInterface dialog, int whichButton)
-                     {
-                        listener.onDialogNegativeClick();
-                     }
-                  }
-            );
+              .setTitle(title)
+              .setPositiveButton(positiveText,
+                      new DialogInterface.OnClickListener() {
+                         public void onClick(DialogInterface dialog, int whichButton) {
+                            listener.onDialogPositiveClick(getArguments().getInt("type"), txtUsername.getText().toString(),
+                                    txtSipuri.getText().toString());
+                         }
+                      }
+              )
+              .setNegativeButton("Cancel",
+                      new DialogInterface.OnClickListener() {
+                         public void onClick(DialogInterface dialog, int whichButton) {
+                            listener.onDialogNegativeClick();
+                         }
+                      }
+              );
       return builder.create();
+
+
    }
+
+   public AddUserDialogFragment() {
+      super();
+   }
+
+   @Override
+   public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+      super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+
+      switch (requestCode) {
+         case MY_PERMISSIONS_REQUEST_READ_CONTACTS: {
+            // If request is cancelled, the result arrays are empty.
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+               importContacts();
+            } else {
+
+               Toast.makeText(getContext(), "Please provide the permissions to proceed", Toast.LENGTH_SHORT).show();
+            }
+            return;
+         }
+
+         // other 'case' lines to check for other
+         // permissions this app might request
+      }
+   }
+
+
+   /*
+    *Method used to import Phone contacts into the app
+    */
+
+   private void importContacts() {
+
+      if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+
+         requestPermissions(new String[]{Manifest.permission.READ_CONTACTS},
+                 MY_PERMISSIONS_REQUEST_READ_CONTACTS);
+
+
+      } else {
+
+
+         //Calling in the ContactAdapter Sub-class of MainFragment and passing the constructor and ArrayList to it
+         MainFragment.ContactAdapter contactAdapter = new MainFragment().new ContactAdapter(getContext(), contactList);
+         //Defining a cursor to query each value of the CONTENT_URI Column
+         final Cursor phones = getContext().getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
+         final ContactsController contactsController = new ContactsController(getContext());
+         //retrieving the contacts in Olympus's Table in an ArrayList
+         contactList = contactsController.retrieveContacts();
+
+         final ProgressDialog progressDialog = ProgressDialog.show(getContext(), "Loading", "Importing the contacts", true);
+
+         //Initiating a background thread as we don't wanna slow down the UI Thread :)
+         AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+
+               while (phones.moveToNext()) {
+
+
+                  String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                  String phoneNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+
+                  try {
+                     //Adding the instantaneous Phone contact to the db and Notifying the view that A value has been added
+                     contactsController.addContact(contactList, name, phoneNumber);
+
+                  } catch (Exception e) {
+                     e.printStackTrace();
+                  }
+
+                  //TODO: Fix the bug to update the Contact's list without destroying the lifeCycle
+
+               }
+
+
+               progressDialog.dismiss();
+
+            }
+         });
+         contactAdapter.notifyDataSetChanged();
+      }
+
+
+   }
+
+
 }

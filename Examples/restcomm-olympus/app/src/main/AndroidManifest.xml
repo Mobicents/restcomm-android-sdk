@@ -17,7 +17,7 @@
 
     <!-- This is needed for debug purposes only, to be able to store Jain SIP logs in external storage -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
     <!-- Needed for TestFairy. IMPORTANT: remove in a production App -->
     <!-- Needed to be able to retrieve and send logs for the App via email for troubleshooting -->
     <uses-permission android:name="android.permission.READ_LOGS"/>

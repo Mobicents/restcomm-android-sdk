@@ -24,20 +24,27 @@ package org.restcomm.android.olympus;
 
 import android.os.Bundle;
 import android.preference.EditTextPreference;
+import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.support.v7.app.AlertDialog;
+import android.widget.Toast;
 
 import org.restcomm.android.sdk.RCDevice;
 
 public class SettingsFragment extends PreferenceFragment {
    @Override
-   public void onCreate(Bundle savedInstanceState)
-   {
+   public void onCreate(Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
 
       // Load the preferences from an XML resource
       addPreferencesFromResource(R.xml.preferences);
+
+
+      // ListPreference listPreference = (ListPreference) findPreference("account");
+      //  listPreference.setEntries(new String[] {"Hi","Hello"});
+
+      //listPreference.setEntryValues(new String[] {"Hey","Yo"});
 
       // setup listener to be used by all EditTextPreferences
       Preference.OnPreferenceChangeListener listener = new Preference.OnPreferenceChangeListener() {
@@ -50,7 +57,7 @@ public class SettingsFragment extends PreferenceFragment {
                return true;
             }
 
-            String value = (String)newValue;
+            String value = (String) newValue;
             if (value.contains(" ")) {
                final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                builder.setTitle(preference.getTitle() + " validation error");
@@ -65,6 +72,8 @@ public class SettingsFragment extends PreferenceFragment {
 
       getPreferenceScreen().findPreference(RCDevice.ParameterKeys.SIGNALING_USERNAME).setOnPreferenceChangeListener(listener);
       getPreferenceScreen().findPreference(RCDevice.ParameterKeys.SIGNALING_DOMAIN).setOnPreferenceChangeListener(listener);
+
+
 
       /*
       pref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
@@ -93,5 +102,6 @@ public class SettingsFragment extends PreferenceFragment {
       });
       */
    }
+
 
 }

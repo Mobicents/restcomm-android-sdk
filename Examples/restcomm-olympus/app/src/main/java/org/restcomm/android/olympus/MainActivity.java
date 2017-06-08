@@ -22,6 +22,7 @@
 
 package org.restcomm.android.olympus;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.DialogFragment;
 import android.content.ComponentCallbacks;
@@ -31,13 +32,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -45,6 +51,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
+
 import com.testfairy.TestFairy;
 //import net.hockeyapp.android.CrashManager;
 //import net.hockeyapp.android.UpdateManager;
@@ -60,13 +67,16 @@ import static org.restcomm.android.olympus.ContactsController.CONTACT_KEY;
 import static org.restcomm.android.olympus.ContactsController.CONTACT_VALUE;
 
 public class MainActivity extends AppCompatActivity
-      implements MainFragment.Callbacks, RCDeviceListener,
-      View.OnClickListener, SharedPreferences.OnSharedPreferenceChangeListener,
-      AddUserDialogFragment.ContactDialogListener, ServiceConnection, ComponentCallbacks,
-      ComponentCallbacks2 {
+        implements MainFragment.Callbacks, RCDeviceListener,
+        View.OnClickListener, SharedPreferences.OnSharedPreferenceChangeListener,
+        AddUserDialogFragment.ContactDialogListener, ServiceConnection, ComponentCallbacks,
+        ComponentCallbacks2 {
 
    private RCDevice device = null;
    boolean serviceBound = false;
+
+   //Defining Permissions int Constants
+   private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 56;
 
    // DEBUG
    //ArrayList<String []> list = new ArrayList<>();
@@ -79,13 +89,18 @@ public class MainActivity extends AppCompatActivity
    private RCConnectivityStatus previousConnectivityStatus = RCConnectivityStatus.RCConnectivityStatusNone;
    private static final String APP_VERSION = "Restcomm Android Olympus Client " + BuildConfig.VERSION_NAME + "#" + BuildConfig.VERSION_CODE; //"Restcomm Android Olympus Client 1.0.0-BETA4#20";
    FloatingActionButton btnAdd;
+
+   //Defining SQLite related variables
+   DatabaseManager dbManager;
+   DatabaseHelper dbHelper;
+   SQLiteDatabase database;
+
    public static String ACTION_DISCONNECTED_BACKGROUND = "org.restcomm.android.olympus.ACTION_DISCONNECTED_BACKGROUND";
 
    private static final int CONNECTION_REQUEST = 1;
 
    @Override
-   protected void onCreate(Bundle savedInstanceState)
-   {
+   protected void onCreate(Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
       setContentView(R.layout.activity_main);
 
@@ -101,6 +116,9 @@ public class MainActivity extends AppCompatActivity
       // TODO set proper image at xhdpi with 48x48
       toolbar.setNavigationIcon(R.drawable.bar_icon_24dp);
       toolbar.setTitle(getTitle());
+      //Initialising DB related classes
+      dbHelper = new DatabaseHelper(this);
+      database = dbHelper.getWritableDatabase();
 
       listFragment = (MainFragment) getSupportFragmentManager().findFragmentById(R.id.item_list);
 
@@ -115,14 +133,14 @@ public class MainActivity extends AppCompatActivity
       // preferences
       prefs.registerOnSharedPreferenceChangeListener(this);
 
+
       // No longer needed, we'll change with toast
       // set it to wifi by default to avoid the status message when starting with wifi
       //previousConnectivityStatus = RCConnectivityStatus.RCConnectivityStatusWiFi;
    }
 
    @Override
-   protected void onStart()
-   {
+   protected void onStart() {
       super.onStart();
       // The activity is about to become visible.
       Log.i(TAG, "%% onStart");
@@ -131,8 +149,7 @@ public class MainActivity extends AppCompatActivity
    }
 
    @Override
-   protected void onResume()
-   {
+   protected void onResume() {
       super.onResume();
 
       // The activity has become visible (it is now "resumed").
@@ -145,16 +162,36 @@ public class MainActivity extends AppCompatActivity
    }
 
    @Override
-   protected void onPause()
-   {
+   protected void onPause() {
       super.onPause();
       // Another activity is taking focus (this activity is about to be "paused").
       Log.i(TAG, "%% onPause");
    }
+   //
+   /*
+   public Cursor fetch() {
+
+      String[] columnsAccounts = {
+              DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_USERNAME,
+              DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_PASSWORD,
+              DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_DOMAIN
+
+      };
+
+      Cursor cursor = database.query(DatabaseContract.AccountEntry.TABLE_NAME_ACCOUNTS, columnsAccounts, null, null, null, null, null);
+
+      if (cursor != null) {
+
+         cursor.moveToFirst();
+      }
+
+      return cursor;
+
+   }
+   */
 
    @Override
-   protected void onStop()
-   {
+   protected void onStop() {
       super.onStop();
       // The activity is no longer visible (it is now "stopped")
       Log.i(TAG, "%% onStop");
@@ -168,8 +205,7 @@ public class MainActivity extends AppCompatActivity
    }
 
    @Override
-   protected void onDestroy()
-   {
+   protected void onDestroy() {
       super.onDestroy();
       // The activity is about to be destroyed.
       Log.i(TAG, "%% onDestroy");
@@ -195,21 +231,20 @@ public class MainActivity extends AppCompatActivity
    }
    */
 
-   public void onLowMemory()
-   {
+   public void onLowMemory() {
       Log.e(TAG, "onLowMemory");
    }
 
+
    @Override
-   public void onTrimMemory(int level)
-   {
+   public void onTrimMemory(int level) {
       super.onTrimMemory(level);
       Log.e(TAG, "onTrimMemory: " + level);
    }
 
+
    @Override
-   public void onNewIntent(Intent intent)
-   {
+   public void onNewIntent(Intent intent) {
       super.onNewIntent(intent);
 
       // We get this intent from CallActivity, when the App is in the background and the user has requested hangup via notification
@@ -221,8 +256,7 @@ public class MainActivity extends AppCompatActivity
 
    // Callbacks for service binding, passed to bindService()
    @Override
-   public void onServiceConnected(ComponentName className, IBinder service)
-   {
+   public void onServiceConnected(ComponentName className, IBinder service) {
       Log.i(TAG, "%% onServiceConnected");
       // We've bound to LocalService, cast the IBinder and get LocalService instance
       RCDevice.RCDeviceBinder binder = (RCDevice.RCDeviceBinder) service;
@@ -258,8 +292,7 @@ public class MainActivity extends AppCompatActivity
 
       if (device.getState() == RCDevice.DeviceState.OFFLINE) {
          getSupportActionBar().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.colorTextSecondary)));
-      }
-      else {
+      } else {
          getSupportActionBar().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.colorPrimary)));
          handleExternalCall();
       }
@@ -268,8 +301,7 @@ public class MainActivity extends AppCompatActivity
    }
 
    @Override
-   public void onServiceDisconnected(ComponentName arg0)
-   {
+   public void onServiceDisconnected(ComponentName arg0) {
       Log.i(TAG, "%% onServiceDisconnected");
       serviceBound = false;
    }
@@ -278,8 +310,7 @@ public class MainActivity extends AppCompatActivity
     * MainFragment Callbacks
     */
    @Override
-   public void onItemSelected(HashMap<String, String> contact, MainFragment.ContactSelectionType type)
-   {
+   public void onItemSelected(HashMap<String, String> contact, MainFragment.ContactSelectionType type) {
       Intent intent = new Intent(this, MessageActivity.class);
       intent.setAction(MessageActivity.ACTION_OPEN_MESSAGE_SCREEN);
       intent.putExtra(MessageActivity.EXTRA_CONTACT_NAME, contact.get(CONTACT_KEY));
@@ -290,8 +321,7 @@ public class MainActivity extends AppCompatActivity
       //onActionClicked(ActionFragment.ActionType.ACTION_TYPE_VIDEO_CALL, contact.get(CONTACT_KEY), contact.get(CONTACT_VALUE));
    }
 
-   public void onContactUpdate(HashMap<String, String> contact, int type)
-   {
+   public void onContactUpdate(HashMap<String, String> contact, int type) {
       AddUserDialogFragment newFragment = AddUserDialogFragment.newInstance(AddUserDialogFragment.DIALOG_TYPE_UPDATE_CONTACT, contact.get(CONTACT_KEY), contact.get(CONTACT_VALUE));
       newFragment.show(getSupportFragmentManager(), "dialog");
       //newFragment.show(getFragmentManager(), "dialog");
@@ -308,13 +338,11 @@ public class MainActivity extends AppCompatActivity
    /**
     * Callbacks for AddUserDialogFragment
     */
-   public void onDialogPositiveClick(int type, String username, String sipuri)
-   {
+   public void onDialogPositiveClick(int type, String username, String sipuri) {
       listFragment.updateContact(type, username, sipuri);
    }
 
-   public void onDialogNegativeClick()
-   {
+   public void onDialogNegativeClick() {
 
    }
 
@@ -350,8 +378,7 @@ public class MainActivity extends AppCompatActivity
    /**
     * Main Activity onClick
     */
-   public void onClick(View view)
-   {
+   public void onClick(View view) {
       if (view.getId() == R.id.imageButton_add) {
          /* TODO: Issue #380: once we figure out the issue with the backgrounding we need to uncomment this, but also place it to a suitable place
          Intent intent = new Intent(this, CallActivity.class);
@@ -377,36 +404,29 @@ public class MainActivity extends AppCompatActivity
    /**
     * RCDeviceListener callbacks
     */
-   public void onStartListening(RCDevice device, RCDeviceListener.RCConnectivityStatus connectivityStatus)
-   {
+   public void onStartListening(RCDevice device, RCDeviceListener.RCConnectivityStatus connectivityStatus) {
       handleConnectivityUpdate(connectivityStatus, null);
    }
 
-   public void onStopListening(RCDevice device)
-   {
+   public void onStopListening(RCDevice device) {
 
    }
 
-   public void onStopListening(RCDevice device, int errorCode, String errorText)
-   {
+   public void onStopListening(RCDevice device, int errorCode, String errorText) {
       if (errorCode == RCClient.ErrorCodes.SUCCESS.ordinal()) {
          handleConnectivityUpdate(RCConnectivityStatus.RCConnectivityStatusNone, "RCDevice: " + errorText);
-      }
-      else {
+      } else {
          handleConnectivityUpdate(RCConnectivityStatus.RCConnectivityStatusNone, "RCDevice Error: " + errorText);
       }
    }
 
-   public void onInitialized(RCDevice device, RCDeviceListener.RCConnectivityStatus connectivityStatus, int statusCode, String statusText)
-   {
+   public void onInitialized(RCDevice device, RCDeviceListener.RCConnectivityStatus connectivityStatus, int statusCode, String statusText) {
       if (statusCode == RCClient.ErrorCodes.SUCCESS.ordinal()) {
          handleConnectivityUpdate(connectivityStatus, "RCDevice successfully initialized, using: " + connectivityStatus);
-      }
-      else if (statusCode == RCClient.ErrorCodes.ERROR_DEVICE_NO_CONNECTIVITY.ordinal()) {
+      } else if (statusCode == RCClient.ErrorCodes.ERROR_DEVICE_NO_CONNECTIVITY.ordinal()) {
          // This is not really an error, since if connectivity comes back the RCDevice will resume automatically
          handleConnectivityUpdate(connectivityStatus, null);
-      }
-      else {
+      } else {
          //Toast.makeText(getApplicationContext(), "RCDevice Initialization Error: " + statusText, Toast.LENGTH_LONG).show();
          //showOkAlert("RCDevice Initialization Error", statusText);
          //handleConnectivityUpdate(connectivityStatus, "RCDevice Initialization Error: " + statusText);
@@ -415,29 +435,24 @@ public class MainActivity extends AppCompatActivity
 
    }
 
-   public void onInitializationError(int errorCode, String errorText)
-   {
+   public void onInitializationError(int errorCode, String errorText) {
       Toast.makeText(getApplicationContext(), "RCDevice Initialization Error: " + errorText, Toast.LENGTH_LONG).show();
    }
 
-   public void onReleased(RCDevice device, int statusCode, String statusText)
-   {
+   public void onReleased(RCDevice device, int statusCode, String statusText) {
       if (statusCode != RCClient.ErrorCodes.SUCCESS.ordinal()) {
          //showOkAlert("RCDevice Release Error", statusText);
          Toast.makeText(getApplicationContext(), "RCDevice Release Error: " + statusText, Toast.LENGTH_LONG).show();
-      }
-      else {
+      } else {
          handleConnectivityUpdate(RCConnectivityStatus.RCConnectivityStatusNone, "RCDevice Released: " + statusText);
       }
    }
 
-   public void onConnectivityUpdate(RCDevice device, RCConnectivityStatus connectivityStatus)
-   {
+   public void onConnectivityUpdate(RCDevice device, RCConnectivityStatus connectivityStatus) {
       handleConnectivityUpdate(connectivityStatus, null);
    }
 
-   public void handleConnectivityUpdate(RCConnectivityStatus connectivityStatus, String text)
-   {
+   public void handleConnectivityUpdate(RCConnectivityStatus connectivityStatus, String text) {
       if (text == null) {
          if (connectivityStatus == RCConnectivityStatus.RCConnectivityStatusNone) {
             text = "RCDevice connectivity change: Lost connectivity";
@@ -455,8 +470,7 @@ public class MainActivity extends AppCompatActivity
 
       if (connectivityStatus == RCConnectivityStatus.RCConnectivityStatusNone) {
          getSupportActionBar().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.colorTextSecondary)));
-      }
-      else {
+      } else {
          getSupportActionBar().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.colorPrimary)));
          handleExternalCall();
       }
@@ -466,8 +480,7 @@ public class MainActivity extends AppCompatActivity
    }
 
    // Handle call issued by external App via CALL intent
-   private void handleExternalCall()
-   {
+   private void handleExternalCall() {
       // We have connectivity (either wifi or cellular), check if we have any external call requests and service it
       GlobalPreferences globalPreferences = new GlobalPreferences(getApplicationContext());
       String externalCallUriString = globalPreferences.getExternalCallUri();
@@ -481,9 +494,8 @@ public class MainActivity extends AppCompatActivity
             //String normalized =  externalCallUriString.replace("restcomm-sip", "sip");
             // also replace '://' with ':' so that the SIP stack can understand it
             //parsedUriString = normalized.replace("://", ":");
-            parsedUriString =  externalCallUriString.replace("restcomm-sip", "sip");
-         }
-         else {
+            parsedUriString = externalCallUriString.replace("restcomm-sip", "sip");
+         } else {
             // either 'tel', 'restcomm-tel', 'client' or 'restcomm-client'. Return just the host part, like 'bob' or '1235' that the Restcomm SDK can handle
             parsedUriString = externalCallUri.getSchemeSpecificPart();
          }
@@ -498,18 +510,15 @@ public class MainActivity extends AppCompatActivity
       }
    }
 
-   public void onMessageSent(RCDevice device, int statusCode, String statusText, String jobId)
-   {
+   public void onMessageSent(RCDevice device, int statusCode, String statusText, String jobId) {
 
    }
 
-   public boolean receivePresenceEvents(RCDevice device)
-   {
+   public boolean receivePresenceEvents(RCDevice device) {
       return false;
    }
 
-   public void onPresenceChanged(RCDevice device, RCPresenceEvent presenceEvent)
-   {
+   public void onPresenceChanged(RCDevice device, RCPresenceEvent presenceEvent) {
 
    }
 
@@ -517,14 +526,12 @@ public class MainActivity extends AppCompatActivity
     * Settings Menu callbacks
     */
    @Override
-   public void onConfigurationChanged(Configuration newConfig)
-   {
+   public void onConfigurationChanged(Configuration newConfig) {
       super.onConfigurationChanged(newConfig);
    }
 
    @Override
-   public boolean onCreateOptionsMenu(Menu menu)
-   {
+   public boolean onCreateOptionsMenu(Menu menu) {
       // Inflate the menu; this adds items to the action bar if it is present.
       getMenuInflater().inflate(R.menu.menu_main, menu);
       return true;
@@ -532,8 +539,7 @@ public class MainActivity extends AppCompatActivity
 
 
    @Override
-   public boolean onOptionsItemSelected(MenuItem item)
-   {
+   public boolean onOptionsItemSelected(MenuItem item) {
       // Handle action bar item clicks here. The action bar will
       // automatically handle clicks on the Home/Up button, so long
       // as you specify a parent activity in AndroidManifest.xml.
@@ -558,8 +564,7 @@ public class MainActivity extends AppCompatActivity
 
    @Override
    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
-                                         String key)
-   {
+                                         String key) {
 
    }
 

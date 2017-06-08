@@ -40,12 +40,23 @@ public final class DatabaseContract {
       public static final int DB_VERSION_GROUND_ZERO = 14;
       // Introducing delivery status field and SimpleCursorAdapter (issue #568)
       public static final int DB_VERSION_DELIVERY_STATUS = 15;
-   };
+   }
+
+   ;
 
    public enum MessageDeliveryStatus {
       TEXT_MESSAGE_PENDING,  // 0
       TEXT_MESSAGE_DELIVERED,  // 1
       TEXT_MESSAGE_FAILED,  // 2
+   }
+
+   public static abstract class AccountEntry implements BaseColumns {
+
+      public static final String TABLE_NAME_ACCOUNTS = "accounts";
+      public static final String COLUMN_NAME_ACCOUNTS_USERNAME = "username";
+      public static final String COLUMN_NAME_ACCOUNTS_PASSWORD = "password";
+      public static final String COLUMN_NAME_ACCOUNTS_DOMAIN = "domain";
+
    }
 
    // Inner class that defines the table contents

@@ -25,6 +25,9 @@ package org.restcomm.android.olympus;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -37,6 +40,7 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.restcomm.android.sdk.RCDevice;
 
@@ -59,13 +63,19 @@ public class SigninActivity extends AppCompatActivity {
 
    //SharedPreferences prefsGeneral = null;
 
+   DatabaseHelper dbHelper;
+   DatabaseManager dbManager;
+   SQLiteDatabase db;
+
    @Override
-   protected void onCreate(Bundle savedInstanceState)
-   {
+   protected void onCreate(Bundle savedInstanceState) {
       Log.i(TAG, "%% onCreate");
 
       super.onCreate(savedInstanceState);
       setContentView(R.layout.activity_signin);
+
+      dbHelper = new DatabaseHelper(this);
+      db = dbHelper.getWritableDatabase();
 
       globalPreferences = new GlobalPreferences(getApplicationContext());
       // Check if
@@ -92,8 +102,7 @@ public class SigninActivity extends AppCompatActivity {
          startActivity(intent);
          // needed to avoid extreme flashing when the App starts up without signing up
          overridePendingTransition(0, 0);
-      }
-      else {
+      } else {
          txtUsername = (EditText) findViewById(R.id.signin_username);
          txtPassword = (EditText) findViewById(R.id.signin_password);
          txtDomain = (EditText) findViewById(R.id.signin_domain);
@@ -101,8 +110,7 @@ public class SigninActivity extends AppCompatActivity {
 
          txtPassword.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
-            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent)
-            {
+            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
                if (id == R.id.login || id == EditorInfo.IME_NULL) {
                   attemptLogin();
                   return true;
@@ -113,8 +121,7 @@ public class SigninActivity extends AppCompatActivity {
 
          mSigninButton.setOnClickListener(new OnClickListener() {
             @Override
-            public void onClick(View view)
-            {
+            public void onClick(View view) {
                attemptLogin();
             }
          });
@@ -126,10 +133,35 @@ public class SigninActivity extends AppCompatActivity {
          txtDomain.setText(prefs.getString(RCDevice.ParameterKeys.SIGNALING_DOMAIN, ""));
          txtPassword.setText(prefs.getString(RCDevice.ParameterKeys.SIGNALING_PASSWORD, ""));
       }
+
+      checkDatabase();
    }
 
-   private void attemptLogin()
-   {
+   //TODO: Check if there is a way to save accounts in SharedPreferences instead of saving them in an SQLite DB, Till then leave issue #388
+
+   private void checkDatabase() {
+      String[] columnsAccounts = {
+              DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_USERNAME,
+              DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_PASSWORD,
+              DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_DOMAIN
+
+      };
+      Toast.makeText(getApplicationContext(), "Welcome to Olympus!", Toast.LENGTH_SHORT).show();
+      try {
+         db.execSQL(DatabaseHelper.SQL_CREATE_ACCOUNTS_TABLE);
+      } catch (SQLException e) {
+
+         if (e.toString().contains("exists")) {
+
+            Toast.makeText(getApplicationContext(), "One or more than one accounts detected", Toast.LENGTH_SHORT).show();
+         }
+
+      }
+
+
+   }
+
+   private void attemptLogin() {
       // Reset errors.
       txtUsername.setError(null);
       txtPassword.setError(null);
@@ -148,18 +180,15 @@ public class SigninActivity extends AppCompatActivity {
          txtUsername.setError(getString(R.string.error_field_required));
          focusView = txtUsername;
          cancel = true;
-      }
-      else if (TextUtils.isEmpty(domain)) {
+      } else if (TextUtils.isEmpty(domain)) {
          txtDomain.setError(getString(R.string.error_invalid_email));
          focusView = txtDomain;
          cancel = true;
-      }
-      else if (username.contains(" ")) {
+      } else if (username.contains(" ")) {
          txtUsername.setError(getString(R.string.error_field_no_whitespace));
          focusView = txtUsername;
          cancel = true;
-      }
-      else if (domain.contains(" ")) {
+      } else if (domain.contains(" ")) {
          txtDomain.setError(getString(R.string.error_field_no_whitespace));
          focusView = txtDomain;
          cancel = true;
@@ -169,13 +198,16 @@ public class SigninActivity extends AppCompatActivity {
          // There was an error; don't attempt login and focus the first
          // form field with an error.
          focusView.requestFocus();
-      }
-      else {
+      } else {
          // note down the fact that we are signed up so that
          globalPreferences.setSignedUp(true);
 
          // values are valid let's update prefs
          updatePrefs();
+         //Initialising Database manager
+         dbManager = new DatabaseManager();
+         //Saving the account details to accounts.db
+         addAccountDb(username, password, domain);
          Intent intent = new Intent(this, MainActivity.class);
          //intent.setAction(RCDevice.ACTION_OUTGOING_CALL);
          //intent.putExtra(RCDevice.EXTRA_DID, sipuri);
@@ -185,8 +217,43 @@ public class SigninActivity extends AppCompatActivity {
       }
    }
 
-   private void updatePrefs()
-   {
+   //Method added to check if an Account exists in the Table already
+   public boolean checkAccountExists(String username) {
+
+
+      String[] columnsAccounts = {
+              DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_USERNAME,
+              DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_PASSWORD,
+              DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_DOMAIN
+
+      };
+      String selection = DatabaseContract.AccountEntry.COLUMN_NAME_ACCOUNTS_USERNAME + " =?";
+      String[] selectionArgs = {username};
+      String limit = "1";
+
+      Cursor cursor = db.query(DatabaseContract.AccountEntry.TABLE_NAME_ACCOUNTS, columnsAccounts, selection, selectionArgs, null, null, null, limit);
+      boolean exists = (cursor.getCount() > 0);
+      return exists;
+
+
+   }
+
+   //Method to add the account into the table after checking
+   public void addAccountDb(String username, String password, String domain) {
+
+      if (checkAccountExists(username)) {
+
+         Toast.makeText(getApplicationContext(), "Hey, I recognise you!", Toast.LENGTH_SHORT).show();
+      } else {
+
+         dbManager.open(getApplicationContext());
+         dbManager.addAccount(username, password, domain);
+
+      }
+
+   }
+
+   private void updatePrefs() {
       SharedPreferences.Editor prefEdit = prefs.edit();
 
       prefEdit.putString(RCDevice.ParameterKeys.SIGNALING_USERNAME, txtUsername.getText().toString());
