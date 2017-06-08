@@ -290,7 +290,7 @@ public class MainFragment extends ListFragment {
       alertDialog.show();
    }
 
-   public static class ContactAdapter extends BaseAdapter {
+   public class ContactAdapter extends BaseAdapter {
       private LayoutInflater mInflater;
       private ArrayList<Map<String, String>> contactList;
       private ContactAdapterListener listener;

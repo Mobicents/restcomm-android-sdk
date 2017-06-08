@@ -40,6 +40,9 @@ import android.support.v7.app.AppCompatDialogFragment;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
+
+import org.apache.log4j.chainsaw.Main;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -60,6 +63,7 @@ public class AddUserDialogFragment extends AppCompatDialogFragment {
    public Button buttonImportUsers;
    EditText txtUsername;
    EditText txtSipuri;
+   boolean permissionsStatus = false;
 
    /* The activity that creates an instance of this dialog fragment must
     * implement this interface in order to receive event callbacks.
@@ -150,6 +154,8 @@ public class AddUserDialogFragment extends AppCompatDialogFragment {
          txtUsername.setEnabled(false);
       }
 
+      checkPermissions();
+
       buttonImportUsers.setOnClickListener(new View.OnClickListener() {
          @Override
          public void onClick(View view) {
@@ -160,7 +166,7 @@ public class AddUserDialogFragment extends AppCompatDialogFragment {
       AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.AppCompatAlertDialogStyle);
 
       //Checking if we have the permission to read contacts when the dialog gets invoked
-      checkPermissions();
+
 
       // Inflate and set the layout for the dialog
       // Pass null as the parent view because its going in the dialog layout
@@ -191,43 +197,57 @@ public class AddUserDialogFragment extends AppCompatDialogFragment {
 
    private void importContacts() {
 
-      //Calling in the ContactAdapter Sub-class of MainFragment and passing the constructor and ArrayList to it
-      final MainFragment.ContactAdapter contactAdapter = new MainFragment.ContactAdapter(getContext(), contactList);
-      //Defining a cursor to query each value of the CONTENT_URI Column
-      final Cursor phones = getContext().getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
-      final ContactsController contactsController = new ContactsController(getContext());
-      //retrieving the contacts in Olympus's Table in an ArrayList
-      contactList = contactsController.retrieveContacts();
+      if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
 
-      final ProgressDialog progressDialog = ProgressDialog.show(getContext(), "Loading", "Importing the contacts", true);
+         ActivityCompat.requestPermissions(getActivity(),
+                 new String[]{Manifest.permission.READ_CONTACTS},
+                 MY_PERMISSIONS_REQUEST_READ_CONTACTS);
 
-      //Initiating a background thread as we don't wanna slow down the UI Thread :)
-      AsyncTask.execute(new Runnable() {
-         @Override
-         public void run() {
+         Toast.makeText(getContext(), "Please accept the permissions to proceed", Toast.LENGTH_SHORT).show();
 
-            while (phones.moveToNext()) {
+      } else {
 
 
-               String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-               String phoneNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+         //Calling in the ContactAdapter Sub-class of MainFragment and passing the constructor and ArrayList to it
+            MainFragment.ContactAdapter contactAdapter = new MainFragment().new ContactAdapter(getContext(),contactList);
+         //Defining a cursor to query each value of the CONTENT_URI Column
+         final Cursor phones = getContext().getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
+         final ContactsController contactsController = new ContactsController(getContext());
+         //retrieving the contacts in Olympus's Table in an ArrayList
+         contactList = contactsController.retrieveContacts();
 
-               try {
-                  //Adding the instantaneous Phone contact to the db and Notifying the view that A value has been added
-                  contactsController.addContact(contactList, name, phoneNumber);
-                  contactAdapter.notifyDataSetChanged();
-               } catch (Exception e) {
-                  e.printStackTrace();
+         final ProgressDialog progressDialog = ProgressDialog.show(getContext(), "Loading", "Importing the contacts", true);
+
+         //Initiating a background thread as we don't wanna slow down the UI Thread :)
+         AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+
+               while (phones.moveToNext()) {
+
+
+                  String name = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                  String phoneNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+
+                  try {
+                     //Adding the instantaneous Phone contact to the db and Notifying the view that A value has been added
+                     contactsController.addContact(contactList, name, phoneNumber);
+
+                  } catch (Exception e) {
+                     e.printStackTrace();
+                  }
+
+                  //TODO: Fix the bug to update the Contact's list without destroying the lifeCycle
+
                }
 
-               //TODO: Fix the bug to update the Contact's list without destroying the lifeCycle
+
+               progressDialog.dismiss();
 
             }
-
-
-            progressDialog.dismiss();
-         }
-      });
+         });
+         contactAdapter.notifyDataSetChanged();
+      }
 
 
    }
