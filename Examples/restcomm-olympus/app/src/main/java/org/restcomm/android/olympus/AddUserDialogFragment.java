@@ -34,6 +34,7 @@ import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatDialogFragment;
@@ -154,8 +155,6 @@ public class AddUserDialogFragment extends AppCompatDialogFragment {
          txtUsername.setEnabled(false);
       }
 
-      checkPermissions();
-
       buttonImportUsers.setOnClickListener(new View.OnClickListener() {
          @Override
          public void onClick(View view) {
@@ -191,6 +190,36 @@ public class AddUserDialogFragment extends AppCompatDialogFragment {
 
 
    }
+
+   public AddUserDialogFragment() {
+      super();
+   }
+
+   @Override
+   public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+      super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+
+      switch (requestCode) {
+         case MY_PERMISSIONS_REQUEST_READ_CONTACTS: {
+            // If request is cancelled, the result arrays are empty.
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+               importContacts();
+            } else {
+
+               Toast.makeText(getContext(), "Please provide the permissions to proceed", Toast.LENGTH_SHORT).show();
+            }
+            return;
+         }
+
+         // other 'case' lines to check for other
+         // permissions this app might request
+      }
+   }
+
+
    /*
     *Method used to import Phone contacts into the app
     */
@@ -199,17 +228,15 @@ public class AddUserDialogFragment extends AppCompatDialogFragment {
 
       if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
 
-         ActivityCompat.requestPermissions(getActivity(),
-                 new String[]{Manifest.permission.READ_CONTACTS},
+         requestPermissions(new String[]{Manifest.permission.READ_CONTACTS},
                  MY_PERMISSIONS_REQUEST_READ_CONTACTS);
 
-         Toast.makeText(getContext(), "Please accept the permissions to proceed", Toast.LENGTH_SHORT).show();
 
       } else {
 
 
          //Calling in the ContactAdapter Sub-class of MainFragment and passing the constructor and ArrayList to it
-            MainFragment.ContactAdapter contactAdapter = new MainFragment().new ContactAdapter(getContext(),contactList);
+         MainFragment.ContactAdapter contactAdapter = new MainFragment().new ContactAdapter(getContext(), contactList);
          //Defining a cursor to query each value of the CONTENT_URI Column
          final Cursor phones = getContext().getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
          final ContactsController contactsController = new ContactsController(getContext());
@@ -252,31 +279,5 @@ public class AddUserDialogFragment extends AppCompatDialogFragment {
 
    }
 
-   public void checkPermissions() {
 
-
-      if (ContextCompat.checkSelfPermission(getContext(),
-              Manifest.permission.READ_CONTACTS)
-              != PackageManager.PERMISSION_GRANTED) {
-
-         // Should we show an explanation?
-         if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
-                 Manifest.permission.READ_CONTACTS)) {
-
-            //Don't need to add anything over here for now --Sagar Vakkala
-
-         } else {
-
-            //Didn't add any explanation right now --Sagar Vakkala
-
-            ActivityCompat.requestPermissions(getActivity(),
-                    new String[]{Manifest.permission.READ_CONTACTS},
-                    MY_PERMISSIONS_REQUEST_READ_CONTACTS);
-
-            //Requesting permissions for reading contacts
-
-
-         }
-      }
-   }
 }

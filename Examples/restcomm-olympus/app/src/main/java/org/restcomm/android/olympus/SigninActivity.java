@@ -153,7 +153,7 @@ public class SigninActivity extends AppCompatActivity {
 
          if (e.toString().contains("exists")) {
 
-            Toast.makeText(getApplicationContext(), "Accounts detected", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "One or more than one accounts detected", Toast.LENGTH_SHORT).show();
          }
 
       }
