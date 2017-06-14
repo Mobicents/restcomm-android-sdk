@@ -39,3 +39,6 @@ script:
     - ./scripts/local-wrapper.bash
 #    - if ! ./scripts/local-wrapper.bash; then echo "Build failed"; travis_terminate 1; fi
 #    - cd Examples/restcomm-olympus && ./gradlew build 
+# Change for testing a PR outside org
+# Another test since PR building wasn't enabled in Travis
+
