@@ -119,8 +119,8 @@ export -f is_git_repo_state_clean
 # and see how it goes 
 if [[ "$TRAVIS_SECURE_ENV_VARS" == "true" ]]
 then
-	export TRUSTED_BUILD="true"
 	echo "-- Trusted build"
+	export TRUSTED_BUILD="true"
 else
 	echo "-- Untrusted build"
 fi
