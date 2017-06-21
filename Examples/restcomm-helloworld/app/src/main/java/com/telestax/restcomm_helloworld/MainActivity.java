@@ -60,7 +60,7 @@ import org.restcomm.android.sdk.RCPresenceEvent;
 //import org.webrtc.VideoRendererGui;
 //import org.webrtc.VideoTrack;
 
-public class MainActivity extends Activity implements RCDeviceListener, RCConnectionListener, OnClickListener,
+public class =MainActivity extends Activity implements RCDeviceListener, RCConnectionListener, OnClickListener,
         ServiceConnection {
 
    private RCDevice device;

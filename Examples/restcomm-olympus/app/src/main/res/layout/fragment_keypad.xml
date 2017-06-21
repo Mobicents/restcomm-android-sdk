@@ -11,158 +11,164 @@
 
 
     <RelativeLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center_horizontal|top">
 
         <ImageView
+            android:id="@+id/backgroundView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#EF222222"
-            android:id="@+id/backgroundView" />
+            android:background="#EF222222"/>
 
         <ImageButton
+            android:id="@+id/button_cancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_clear_24dp"
+            android:layout_margin="10dp"
             android:background="@android:color/transparent"
-            android:id="@+id/button_cancel"
             android:padding="10dp"
-            android:layout_margin="10dp"/>
+            android:src="@drawable/ic_clear_24dp"/>
 
         <TextView
+            android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily=""
-            android:textSize="30sp"
-            android:textColor="@color/colorDtmfColor"
-            android:text="DTMF Keypad"
-            android:id="@+id/textView"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="70dp"/>
+            android:layout_marginTop="70dp"
+            android:fontFamily=""
+            android:text="DTMF Keypad"
+            android:textColor="@color/colorDtmfColor"
+            android:textSize="30sp"/>
 
         <ImageButton
+            android:id="@+id/imageButton_1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/imageButton_1"
-            android:background="@android:color/transparent"
-            android:src="@drawable/one_digit"
             android:layout_alignTop="@+id/imageButton_2"
+            android:layout_marginRight="30dp"
             android:layout_toLeftOf="@+id/imageButton_2"
             android:layout_toStartOf="@+id/imageButton_2"
-            android:layout_marginRight="30dp" />
+            android:background="@android:color/transparent"
+            android:src="@drawable/one_digit_new"/>
+
         <ImageButton
+            android:id="@+id/imageButton_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/imageButton_2"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
             android:layout_marginTop="170dp"
             android:background="@android:color/transparent"
-            android:src="@drawable/two_digit"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true" />
-        <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/imageButton_3"
-            android:background="@android:color/transparent"
-            android:src="@drawable/three_digit"
-            android:layout_alignTop="@+id/imageButton_2"
-            android:layout_toRightOf="@+id/imageButton_2"
-            android:layout_toEndOf="@+id/imageButton_2"
-            android:layout_marginLeft="30dp" />
+            android:src="@drawable/two_digit_new"/>
 
         <ImageButton
+            android:id="@+id/imageButton_3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/imageButton_4"
+            android:layout_alignTop="@+id/imageButton_2"
+            android:layout_marginLeft="30dp"
+            android:layout_toEndOf="@+id/imageButton_2"
+            android:layout_toRightOf="@+id/imageButton_2"
             android:background="@android:color/transparent"
-            android:src="@drawable/four_digit"
+            android:src="@drawable/three_digit_new"/>
+
+        <ImageButton
+            android:id="@+id/imageButton_4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_alignTop="@+id/imageButton_5"
+            android:layout_marginRight="30dp"
             android:layout_toLeftOf="@+id/imageButton_5"
             android:layout_toStartOf="@+id/imageButton_5"
-            android:layout_marginRight="30dp" />
+            android:background="@android:color/transparent"
+            android:src="@drawable/four_digit_new"/>
+
         <ImageButton
+            android:id="@+id/imageButton_5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/imageButton_5"
-            android:background="@android:color/transparent"
             android:layout_below="@+id/imageButton_2"
             android:layout_centerHorizontal="true"
-            android:src="@drawable/five_digit"
-            android:layout_marginTop="30dp" />
-        <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/imageButton_6"
+            android:layout_marginTop="30dp"
             android:background="@android:color/transparent"
-            android:src="@drawable/six_digit"
-            android:layout_alignTop="@+id/imageButton_5"
-            android:layout_toRightOf="@+id/imageButton_5"
-            android:layout_toEndOf="@+id/imageButton_5"
-            android:layout_marginLeft="30dp" />
+            android:src="@drawable/five_digit_new"/>
 
         <ImageButton
+            android:id="@+id/imageButton_6"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/imageButton_7"
+            android:layout_alignTop="@+id/imageButton_5"
+            android:layout_marginLeft="30dp"
+            android:layout_toEndOf="@+id/imageButton_5"
+            android:layout_toRightOf="@+id/imageButton_5"
             android:background="@android:color/transparent"
-            android:src="@drawable/seven_digit"
+            android:src="@drawable/six_digit_new"/>
+
+        <ImageButton
+            android:id="@+id/imageButton_7"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_alignTop="@+id/imageButton_8"
+            android:layout_marginRight="30dp"
             android:layout_toLeftOf="@+id/imageButton_8"
             android:layout_toStartOf="@+id/imageButton_8"
-            android:layout_marginRight="30dp" />
-        <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/imageButton_8"
             android:background="@android:color/transparent"
-            android:layout_below="@+id/imageButton_5"
-            android:layout_centerHorizontal="true"
-            android:src="@drawable/eight_digit"
-            android:layout_marginTop="30dp" />
-        <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/imageButton_9"
-            android:background="@android:color/transparent"
-            android:src="@drawable/nine_digit"
-            android:layout_alignTop="@+id/imageButton_8"
-            android:layout_toRightOf="@+id/imageButton_8"
-            android:layout_toEndOf="@+id/imageButton_8"
-            android:layout_marginLeft="30dp" />
+            android:src="@drawable/seven_digit_new"/>
 
         <ImageButton
+            android:id="@+id/imageButton_8"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/imageButton_star"
+            android:layout_below="@+id/imageButton_5"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="30dp"
             android:background="@android:color/transparent"
-            android:src="@drawable/star_digit"
+            android:src="@drawable/eight_digit_new"/>
+
+        <ImageButton
+            android:id="@+id/imageButton_9"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/imageButton_8"
+            android:layout_marginLeft="30dp"
+            android:layout_toEndOf="@+id/imageButton_8"
+            android:layout_toRightOf="@+id/imageButton_8"
+            android:background="@android:color/transparent"
+            android:src="@drawable/nine_digit_new"/>
+
+        <ImageButton
+            android:id="@+id/imageButton_star"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_alignTop="@+id/imageButton_0"
+            android:layout_marginRight="30dp"
             android:layout_toLeftOf="@+id/imageButton_0"
             android:layout_toStartOf="@+id/imageButton_0"
-            android:layout_marginRight="30dp" />
+            android:background="@android:color/transparent"
+            android:src="@drawable/star_digit_new"/>
+
         <ImageButton
+            android:id="@+id/imageButton_0"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/imageButton_0"
-            android:background="@android:color/transparent"
             android:layout_below="@+id/imageButton_8"
             android:layout_centerHorizontal="true"
-            android:src="@drawable/zero_digit"
-            android:layout_marginTop="30dp" />
+            android:layout_marginTop="30dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/zero_digit_new"/>
+
         <ImageButton
+            android:id="@+id/imageButton_hash"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/imageButton_hash"
-            android:background="@android:color/transparent"
-            android:src="@drawable/hash_digit"
             android:layout_alignTop="@+id/imageButton_0"
-            android:layout_toRightOf="@+id/imageButton_0"
+            android:layout_marginLeft="30dp"
             android:layout_toEndOf="@+id/imageButton_0"
-            android:layout_marginLeft="30dp" />
+            android:layout_toRightOf="@+id/imageButton_0"
+            android:background="@android:color/transparent"
+            android:src="@drawable/hash_digit_new"/>
 
     </RelativeLayout>
 

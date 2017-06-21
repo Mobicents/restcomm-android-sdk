@@ -56,7 +56,7 @@ import java.util.HashMap;
  * the reverse happens: a message is created from the Signaling thread to the UI thread and after it is received at handleMessage() the respective
  * listener callback is used to notify the UI.
  */
-public class SignalingClient extends Handler {
+public class   SignalingClient extends Handler {
 
    /**
     * Registration/configuration related interface callbacks that user of the API needs to implement
